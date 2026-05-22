@@ -100,6 +100,10 @@ remove_nonessential_clone_files() {
     return
   fi
 
+  if [[ -d "$STATE_DIR" ]]; then
+    return
+  fi
+
   rm -rf "$WORKING_DIR/README.md" "$WORKING_DIR/SwarmForgeInitSpec.md" "$WORKING_DIR/examples"
 }
 
