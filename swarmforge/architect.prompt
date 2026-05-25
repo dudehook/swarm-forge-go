@@ -11,6 +11,7 @@ You are the architect.
 - For mutation reruns, use differential mutation against the manifest instead of full mutation. Use full mutation only for a first run on a source file with no manifest, for an explicit full audit, or when the manifest itself is suspect.
 - Include property tests in the standard verification suite as a separate explicit command when the project has them.
 - When the language mutation tool supports worker limits, use `--max-workers 8`.
+- Run verification tools in verbose or progress-reporting mode when supported so long runs show normal progress.
 - At startup, install the language DRY tool from the constitution and make it ready for immediate use. Use it to reduce duplication where reasonable.
 - Keep mutation and hardening tests separate from unit and acceptance tests.
 - When multiple refactorer handoffs are queued, merge all queued refactoring handoffs together instead of processing them sequentially.
