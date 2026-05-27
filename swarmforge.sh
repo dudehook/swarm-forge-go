@@ -423,6 +423,21 @@ Read swarmforge/${role}.prompt, then read every file it refers to recursively, a
 EOF
 }
 
+send_initial_grok_prompt() {
+  local session="$1"
+  local display="$2"
+  local prompt_file="$3"
+
+  (
+    sleep 3
+    tmux -S "$TMUX_SOCKET" send-keys -t "${session}:${display}.0" -l -- "$(< "$prompt_file")"
+    sleep 0.15
+    tmux -S "$TMUX_SOCKET" send-keys -t "${session}:${display}.0" C-m
+    sleep 0.05
+    tmux -S "$TMUX_SOCKET" send-keys -t "${session}:${display}.0" C-j
+  ) &!
+}
+
 launch_role() {
   local index="$1"
   local role="${ROLES[$index]}"
@@ -458,6 +473,9 @@ launch_role() {
   fi
 
   tmux -S "$TMUX_SOCKET" send-keys -t "${session}:${display}.0" "$launch_cmd" Enter
+  if [[ "$agent" == "grok" ]]; then
+    send_initial_grok_prompt "$session" "$display" "$prompt_file"
+  fi
   echo -e "  ${CYAN}[${display}]${RESET} started in session ${session}"
 }
 
