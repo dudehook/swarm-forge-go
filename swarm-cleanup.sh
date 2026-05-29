@@ -19,6 +19,7 @@ has_command() {
 }
 
 source "$SCRIPT_DIR/swarm-terminal-adapter.sh"
+load_terminal_backend "$TERMINAL_BACKEND"
 
 for session in "$@"; do
   tmux -S "$TMUX_SOCKET" kill-session -t "$session" 2>/dev/null || true

@@ -122,6 +122,58 @@ SWARMFORGE_TERMINAL=none swarm
 Use `ghostty` when you want SwarmForge to open Ghostty tabs instead of the default Terminal.app windows.
 Use `none` when you want SwarmForge to skip terminal automation and attach the cleanup tmux session in the current shell.
 
+### Adding A Terminal Backend
+
+Terminal backends live in `terminal-adapters/`. To add a new backend, create one file named after the backend:
+
+```text
+terminal-adapters/wezterm.sh
+```
+
+The file must define this small contract:
+
+```sh
+terminal_backend_label() {
+  echo "WezTerm"
+}
+
+terminal_backend_tracks_windows() {
+  return 0
+}
+
+terminal_open_session() {
+  local session="$1"
+  local title="$2"
+  local sibling_id="${3:-}"
+
+  # Open a terminal surface that runs:
+  # cd "$WORKING_DIR" && exec tmux -S "$TMUX_SOCKET" attach-session -t "$session"
+  #
+  # Print a stable window/tab id to stdout.
+}
+
+terminal_window_exists() {
+  local window_id="$1"
+
+  # Return 0 if the id from terminal_open_session still exists.
+  # Return nonzero otherwise.
+}
+
+terminal_close_window() {
+  local window_id="$1"
+
+  # Close the id from terminal_open_session.
+}
+```
+
+Then run SwarmForge with the backend name:
+
+```sh
+SWARMFORGE_TERMINAL=wezterm swarm
+```
+
+If the terminal cannot return stable ids for open/check/close, set `terminal_backend_tracks_windows` to `return 1`; SwarmForge will skip the watchdog and use the current-shell fallback behavior for that backend. Only edit `swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
+
 Example config:
 
 ```conf

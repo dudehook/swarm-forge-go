@@ -310,6 +310,13 @@ check_helper_scripts() {
       exit 1
     fi
   done
+
+  for helper in terminal-app.sh ghostty.sh none.sh; do
+    if [[ ! -x "$SCRIPT_DIR/terminal-adapters/$helper" ]]; then
+      echo -e "${RED}Error:${RESET} Required terminal adapter not found or not executable: $SCRIPT_DIR/terminal-adapters/$helper"
+      exit 1
+    fi
+  done
 }
 
 write_notify_script() {
@@ -558,6 +565,7 @@ prepare_workspace
 prepare_worktrees
 choose_cleanup_owner
 TERMINAL_BACKEND="$(detect_terminal_backend)"
+load_terminal_backend "$TERMINAL_BACKEND"
 
 local_session=""
 for local_session in "${SESSIONS[@]}"; do

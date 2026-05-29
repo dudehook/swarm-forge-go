@@ -15,6 +15,7 @@ has_command() {
 }
 
 source "$SCRIPT_DIR/swarm-terminal-adapter.sh"
+load_terminal_backend "$TERMINAL_BACKEND"
 
 typeset -A MISSING_COUNTS=()
 
