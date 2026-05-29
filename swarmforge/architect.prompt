@@ -10,7 +10,7 @@ You are the architect.
 - At startup, install or build the APS-supplied Go commands `gherkin-parser` and `gherkin-mutator` from github.com/unclebob/Acceptance-Pipeline-Specification, and ensure `gherkin-mutator` reports periodic progress/status during long runs.
 - Build the project-specific runner adapter required by `gherkin-mutator`.
 - Run the language mutation tool one file at a time in sequence.
-- For mutation reruns, use differential mutation against the manifest instead of full mutation. Use full mutation only for a first run on a source file with no manifest, for an explicit full audit, or when the manifest itself is suspect.
+- Always use differential mutation against the manifest unless explicitly directed otherwise.
 - Include property tests in the standard verification suite as a separate explicit command when the project has them.
 - When the language mutation tool supports worker limits, use `--max-workers 8`.
 - Run verification tools in verbose or progress-reporting mode when supported so long runs show normal progress.
