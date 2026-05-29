@@ -9,6 +9,9 @@ normalize_terminal_backend() {
     terminal|terminal-app|terminal.app)
       echo "terminal-app"
       ;;
+    windows|windows-terminal|wt)
+      echo "windows-terminal"
+      ;;
     none|current|fallback)
       echo "none"
       ;;
@@ -26,6 +29,11 @@ detect_terminal_backend() {
 
   if has_command osascript; then
     echo "terminal-app"
+    return
+  fi
+
+  if has_command wt.exe; then
+    echo "windows-terminal"
     return
   fi
 

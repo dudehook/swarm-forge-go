@@ -109,17 +109,20 @@ SwarmForge opens trackable terminal windows or tabs through a small terminal bac
 Default detection:
 
 - If AppleScript is available, SwarmForge opens macOS Terminal.app windows.
+- Otherwise, if `wt.exe` is available, SwarmForge opens Windows Terminal windows.
 - Otherwise, SwarmForge attaches the cleanup tmux session in the current shell.
 
 Set `SWARMFORGE_TERMINAL` to override detection:
 
 ```sh
-SWARMFORGE_TERMINAL=ghostty swarm
-SWARMFORGE_TERMINAL=terminal-app swarm
-SWARMFORGE_TERMINAL=none swarm
+SWARMFORGE_TERMINAL=ghostty ./swarm
+SWARMFORGE_TERMINAL=terminal-app ./swarm
+SWARMFORGE_TERMINAL=windows-terminal ./swarm
+SWARMFORGE_TERMINAL=none ./swarm
 ```
 
 Use `ghostty` when you want SwarmForge to open Ghostty tabs instead of the default Terminal.app windows.
+Use `windows-terminal` when you want SwarmForge to open Windows Terminal windows from WSL.
 Use `none` when you want SwarmForge to skip terminal automation and attach the cleanup tmux session in the current shell.
 
 ### Adding A Terminal Backend
@@ -135,6 +138,10 @@ The file must define this small contract:
 ```sh
 terminal_backend_label() {
   echo "WezTerm"
+}
+
+terminal_backend_can_open_sessions() {
+  return 0
 }
 
 terminal_backend_tracks_windows() {
@@ -169,10 +176,12 @@ terminal_close_window() {
 Then run SwarmForge with the backend name:
 
 ```sh
-SWARMFORGE_TERMINAL=wezterm swarm
+SWARMFORGE_TERMINAL=wezterm ./swarm
 ```
 
-If the terminal cannot return stable ids for open/check/close, set `terminal_backend_tracks_windows` to `return 1`; SwarmForge will skip the watchdog and use the current-shell fallback behavior for that backend. Only edit `swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
+If the terminal can open sessions but cannot return stable ids for open/check/close, keep `terminal_backend_can_open_sessions` as `return 0` and set `terminal_backend_tracks_windows` to `return 1`. SwarmForge will open one surface per session and skip the watchdog for that backend. `terminal-adapters/windows-terminal.sh` is an example of this launch-only style.
+
+If the backend cannot open sessions at all, set both capability functions to `return 1`; SwarmForge will attach the cleanup tmux session in the current shell. Only edit `swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
 
 Example config:
 
@@ -210,4 +219,4 @@ Use these example directories as starting points for project-local `swarmforge/`
 	
 ## Running SwarmForge
 
-Just type `swarm`. The windows should all pop up.
+Just type `./swarm`. The windows should all pop up.

@@ -311,7 +311,7 @@ check_helper_scripts() {
     fi
   done
 
-  for helper in terminal-app.sh ghostty.sh none.sh; do
+  for helper in terminal-app.sh ghostty.sh windows-terminal.sh none.sh; do
     if [[ ! -x "$SCRIPT_DIR/terminal-adapters/$helper" ]]; then
       echo -e "${RED}Error:${RESET} Required terminal adapter not found or not executable: $SCRIPT_DIR/terminal-adapters/$helper"
       exit 1
@@ -605,29 +605,37 @@ echo -e "${GREEN}Tip: Use $WORKING_DIR/swarmtools/notify-agent.sh <role-or-index
 echo -e "${GREEN}Tip: Reattach manually with 'tmux -S $TMUX_SOCKET attach-session -t <session-name>' if needed.${RESET}"
 echo ""
 
-if terminal_backend_tracks_windows; then
+if terminal_backend_can_open_sessions; then
   echo -e "Opening separate $(terminal_backend_label) surfaces for each session..."
-  : > "$WINDOW_IDS_FILE"
-  : > "$WINDOW_STATE_FILE"
+  if terminal_backend_tracks_windows; then
+    : > "$WINDOW_IDS_FILE"
+    : > "$WINDOW_STATE_FILE"
+  fi
   previous_window_id=""
   for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
     window_id="$(terminal_open_session "${SESSIONS[$i]}" "SwarmForge ${DISPLAY_NAMES[$i]}" "$previous_window_id")"
-    echo "$window_id" >> "$WINDOW_IDS_FILE"
-    printf '%s\t%s\t%s\t%s\n' \
-      "$i" \
-      "$window_id" \
-      "${SESSIONS[$i]}" \
-      "SwarmForge ${DISPLAY_NAMES[$i]}" >> "$WINDOW_STATE_FILE"
-    previous_window_id="$window_id"
+    if terminal_backend_tracks_windows; then
+      echo "$window_id" >> "$WINDOW_IDS_FILE"
+      printf '%s\t%s\t%s\t%s\n' \
+        "$i" \
+        "$window_id" \
+        "${SESSIONS[$i]}" \
+        "SwarmForge ${DISPLAY_NAMES[$i]}" >> "$WINDOW_STATE_FILE"
+      previous_window_id="$window_id"
+    fi
   done
-  nohup "$SCRIPT_DIR/swarm-window-watchdog.sh" \
-    "$WINDOW_STATE_FILE" \
-    "$WINDOW_IDS_FILE" \
-    "$CLEANUP_OWNER_INDEX" \
-    "$TMUX_SOCKET" \
-    "$WORKING_DIR" \
-    "$TERMINAL_BACKEND" > "$WINDOW_WATCHDOG_LOG" 2>&1 &
+  if terminal_backend_tracks_windows; then
+    nohup "$SCRIPT_DIR/swarm-window-watchdog.sh" \
+      "$WINDOW_STATE_FILE" \
+      "$WINDOW_IDS_FILE" \
+      "$CLEANUP_OWNER_INDEX" \
+      "$TMUX_SOCKET" \
+      "$WORKING_DIR" \
+      "$TERMINAL_BACKEND" > "$WINDOW_WATCHDOG_LOG" 2>&1 &
+  else
+    echo -e "${YELLOW}$(terminal_backend_label) surfaces are not trackable; window watchdog is disabled for this backend.${RESET}"
+  fi
 else
-  echo -e "${YELLOW}No trackable terminal backend found; attaching current shell to '${SESSIONS[$CLEANUP_OWNER_INDEX]}' instead.${RESET}"
+  echo -e "${YELLOW}No terminal backend found; attaching current shell to '${SESSIONS[$CLEANUP_OWNER_INDEX]}' instead.${RESET}"
   tmux -S "$TMUX_SOCKET" attach-session -t "${SESSIONS[$CLEANUP_OWNER_INDEX]}"
 fi

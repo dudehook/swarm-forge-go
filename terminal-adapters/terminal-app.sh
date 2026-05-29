@@ -4,6 +4,10 @@ terminal_backend_label() {
   echo "Terminal"
 }
 
+terminal_backend_can_open_sessions() {
+  return 0
+}
+
 terminal_backend_tracks_windows() {
   return 0
 }
