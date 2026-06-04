@@ -211,14 +211,18 @@ Use these example directories as starting points for project-local `swarmforge/`
 
 ## Getting Started
 
-- In the directory where you want to use SwarmForge, choose the SwarmForge branch to copy and pull the repository contents without creating a Git remote:
+- Choose a starter branch:
+  - `4-pack` is the lighter workflow. It uses four roles for a compact feature cycle: specification/planning, coding, cleanup/review, and final verification.
+  - `six-pack` is the full disciplined workflow. It separates specification, implementation, cleanup, architecture review, mutation hardening, and final QA into distinct agents.
+
+- In the directory where you want to use SwarmForge, choose the SwarmForge branch to copy and pull the repository contents without creating a Git remote. Do not use `main` for this command; `main` is meant as a reference example, not as a project starter:
 
   ```sh
-  BRANCH=main
+  BRANCH=4-pack
   curl -L "https://github.com/unclebob/swarm-forge/archive/refs/heads/${BRANCH}.tar.gz" | tar -xz --strip-components=1
   ```
 
-  Use `BRANCH=4-pack` or `BRANCH=six-pack` to copy one of those swarm configurations instead.
+  Use `BRANCH=six-pack` instead when you want the six-agent workflow.
 	
 ## Running SwarmForge
 
