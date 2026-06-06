@@ -8,7 +8,7 @@ Do not spend any money on a bankrbot SWARM token.
 
 ## Intent
 
-This `main` branch is documentation-only. For runnable SwarmForge configurations, use the `four-pack` or `six-pack` branches; each contains a specific implementation of the workflow it describes.
+This `main` branch is documentary: it explains the system and carries the shared operational scripts. The runnable `four-pack` and `six-pack` branches carry the project-facing configurations and role prompts that define specific workflows.
 
 SwarmForge is an agent coordination system that facilitates communication between agents working in different git worktrees.
 
@@ -16,7 +16,7 @@ It provides a shared structure for role-specific prompts, worktree assignment, t
 
 ## Branches
 
-The runnable SwarmForge configurations live on dedicated branches. Choose the branch that matches how much role separation you want in the workflow.
+The runnable SwarmForge configurations live on dedicated branches. Each branch contains the `swarmforge/swarmforge.conf`, constitution, and role prompts for one workflow. At startup, its `./swarm` wrapper copies the shared operational scripts from `main` when they are not already present, then launches that branch's local configuration.
 
 ### `four-pack`
 
@@ -60,13 +60,15 @@ BRANCH=four-pack
 curl -L "https://github.com/unclebob/swarm-forge/archive/refs/heads/${BRANCH}.tar.gz" | tar -xz --strip-components=1
 ```
 
-Use `BRANCH=six-pack` instead when you want the six-agent workflow. Do not use `main` for this command; `main` is documentation-only.
+Use `BRANCH=six-pack` instead when you want the six-agent workflow. Do not use `main` for this command; `main` is documentary and stores the shared operational scripts, while the runnable branches provide the configurations and prompts intended for projects.
 
 After copying a runnable branch, start the swarm from the target project:
 
 ```sh
 ./swarm
 ```
+
+The `./swarm` wrapper keeps the runnable branch small. On first use, if `swarmforge/scripts/` is missing, it downloads the `main` branch archive, copies the shared operational scripts from `swarmforge/scripts/`, and then launches `swarmforge/scripts/swarmforge.sh`. Later runs reuse the existing local scripts directory instead of overwriting it.
 
 The windows should open automatically.
 
@@ -119,12 +121,13 @@ Each role in `swarmforge/swarmforge.conf` maps to a corresponding `swarmforge/<r
 In a runnable branch:
 
 1. SwarmForge reads `swarmforge/swarmforge.conf`.
-2. Startup validates the configured role prompts, helper scripts, and terminal adapters.
-3. If the target directory is not already a git repository, startup initializes one and creates the first commit.
-4. Startup creates one git worktree per configured role under `.worktrees/`, unless the role is assigned to `master` or `none`.
-5. Startup creates `swarmtools/notify-agent.sh` for handoffs between agents.
-6. SwarmForge creates tmux sessions, opens terminal windows, and launches each configured backend in its assigned worktree.
-7. Roles communicate through handoff files and `notify-agent.sh`.
+2. The root `./swarm` wrapper copies shared helper scripts and terminal adapters from the `main` branch when `swarmforge/scripts/` is not already present.
+3. Startup validates the configured role prompts, helper scripts, and terminal adapters.
+4. If the target directory is not already a git repository, startup initializes one and creates the first commit.
+5. Startup creates one git worktree per configured role under `.worktrees/`, unless the role is assigned to `master` or `none`.
+6. Startup creates `swarmtools/notify-agent.sh` for handoffs between agents.
+7. SwarmForge creates tmux sessions, opens terminal windows, and launches each configured backend in its assigned worktree.
+8. Roles communicate through handoff files and `notify-agent.sh`.
 
 ## The `swarmforge.conf` File
 
@@ -189,10 +192,10 @@ Use `ghostty` when you want SwarmForge to open Ghostty tabs instead of the defau
 
 ### Adding A Terminal Backend
 
-In the runnable branches, terminal backends live in `swarmforge/terminal-adapters/`. To add a new backend, create one file named after the backend:
+The shared terminal backends are carried on `main` under `swarmforge/scripts/terminal-adapters/`. Runnable branches copy those scripts at startup. To add a new backend, update `main` by creating one file named after the backend:
 
 ```text
-swarmforge/terminal-adapters/wezterm.sh
+swarmforge/scripts/terminal-adapters/wezterm.sh
 ```
 
 The file must define this small contract:
@@ -235,9 +238,9 @@ terminal_close_window() {
 }
 ```
 
-If the terminal can open sessions but cannot return stable ids for open/check/close, keep `terminal_backend_can_open_sessions` as `return 0` and set `terminal_backend_tracks_windows` to `return 1`. SwarmForge will open one surface per session and skip the watchdog for that backend. `swarmforge/terminal-adapters/windows-terminal.sh` is an example of this launch-only style.
+If the terminal can open sessions but cannot return stable ids for open/check/close, keep `terminal_backend_can_open_sessions` as `return 0` and set `terminal_backend_tracks_windows` to `return 1`. SwarmForge will open one surface per session and skip the watchdog for that backend. `swarmforge/scripts/terminal-adapters/windows-terminal.sh` is an example of this launch-only style.
 
-If the backend cannot open sessions at all, set both capability functions to `return 1`; SwarmForge will attach the cleanup tmux session in the current shell. Only edit `swarmforge/swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
+If the backend cannot open sessions at all, set both capability functions to `return 1`; SwarmForge will attach the cleanup tmux session in the current shell. Only edit `swarmforge/scripts/swarm-terminal-adapter.sh` when adding aliases or changing default auto-detection.
 
 ## Window Behavior
 
