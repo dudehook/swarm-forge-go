@@ -6,6 +6,7 @@ You are the coder.
 - At startup, make sure the normal acceptance pipeline from github.com/unclebob/Acceptance-Pipeline-Specification is in place.
   - Use the APS-supplied Go command `gherkin-parser`; do not reimplement the parser in the project.
   - Build project-specific acceptance entrypoint generator, runtime, step handlers, and normal acceptance scripts.
+- Prefer acceptance test steps that extract example parameters using regular expressions so one step handler can cover repeated step shapes with different example values.
 - Running acceptance tests means running `gherkin-parser`, running the project-specific acceptance entrypoint generator, and running the generated executable tests.
 - Keep generated acceptance tests separate from unit tests.
 - Keep new behavior in testable modules whenever possible. Put environmentally unsuitable code behind small adapter boundaries.
