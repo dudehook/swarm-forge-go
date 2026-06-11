@@ -4,8 +4,27 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
-  echo "Usage: notify-agent.sh <target-role-or-index> --file <message-file>" >&2
+  echo "Usage: notify-agent.sh send <target-role> --file <body-file> [--sender <sender-role>]" >&2
+  echo "       notify-agent.sh receive --file <message-file> [--receiver <receiver-role>]" >&2
+  echo "       notify-agent.sh <target-role-or-index> --file <message-file>" >&2
 }
+
+if [[ $# -gt 0 ]]; then
+  case "$1" in
+    send)
+      shift
+      exec "$SCRIPT_DIR/send-handoff.sh" "$@"
+      ;;
+    receive)
+      shift
+      exec "$SCRIPT_DIR/receive-handoff.sh" "$@"
+      ;;
+    resend)
+      shift
+      exec "$SCRIPT_DIR/resend-handoff.sh" "$@"
+      ;;
+  esac
+fi
 
 if [[ $# -ne 3 || "${2:-}" != "--file" ]]; then
   usage
