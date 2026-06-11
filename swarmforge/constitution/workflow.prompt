@@ -10,7 +10,7 @@
 - Each log entry must include `timestamp`, `direction`, `message`, and `note` fields. Use `direction` values `received`, `sent`, or `queued`.
 - When receiving a handoff, append a `logbook.json` entry with a timestamp, direction `received`, the complete handoff message received, and a brief note describing the action taken.
 - When sending a handoff, append a `logbook.json` entry with a timestamp, direction `sent`, the complete handoff message sent, and a brief note summarizing the handoff contents.
-- Commit `logbook.json` updates with the related work; do not leave handoff log entries untracked or uncommitted.
+- Commit `logbook.json` updates with the next substantive role-owned commit or outgoing handoff commit. Make a logbook-only commit only when no other work will be committed for that handoff, such as a queued handoff that requires no role-specific work.
 - For every handoff, write the complete handoff message to `./tmp/<target-role>-handoff.txt`, then send it with `notify-agent.sh <target-role> --file ./tmp/<target-role>-handoff.txt`.
 - Start every handoff message with: `Re-read your role and constitution.`
 - The specifier invents a short, stable handoff name for each accepted specification handoff.
