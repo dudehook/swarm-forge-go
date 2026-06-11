@@ -126,7 +126,7 @@ In a runnable branch:
 3. Startup validates the configured role prompts, helper scripts, and terminal adapters.
 4. If the target directory is not already a git repository, startup initializes one and creates the first commit.
 5. Startup creates one git worktree per configured role under `.worktrees/`, unless the role is assigned to `master` or `none`.
-6. Startup puts `swarmforge/scripts/` on each agent's `PATH`, so agents use `notify-agent.sh` without generating helper scripts in their worktrees.
+6. Startup syncs `swarmforge/scripts/` into each role worktree and puts that local scripts directory on each agent's `PATH`, so agents use `notify-agent.sh` without reaching back into the master checkout.
 7. SwarmForge creates tmux sessions, opens terminal windows, and launches each configured backend in its assigned worktree.
 8. Roles communicate through sequenced handoff files. `notify-agent.sh send` assigns message ids and sequence numbers, archives sent messages, records logbook entries, and sends the message; `notify-agent.sh receive` validates ordering and requests resends when gaps are detected.
 

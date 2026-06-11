@@ -316,6 +316,20 @@ prepare_worktrees() {
   done
 }
 
+sync_worktree_scripts() {
+  local i worktree_path role_scripts_dir
+  for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
+    worktree_path="${WORKTREE_PATHS[$i]}"
+    if [[ "$worktree_path" == "$WORKING_DIR" ]]; then
+      continue
+    fi
+
+    role_scripts_dir="$worktree_path/swarmforge/scripts"
+    mkdir -p "$role_scripts_dir"
+    cp -R "$SCRIPT_DIR/." "$role_scripts_dir/"
+  done
+}
+
 check_backend_dependencies() {
   local i
   for (( i = 1; i <= ${#AGENTS[@]}; i++ )); do
@@ -369,23 +383,28 @@ launch_role() {
   local session="${SESSIONS[$index]}"
   local display="${DISPLAY_NAMES[$index]}"
   local role_worktree="${WORKTREE_PATHS[$index]}"
+  local role_script_dir="$role_worktree/swarmforge/scripts"
   local prompt_file="$PROMPTS_DIR/${role}.md"
   local launch_cmd=""
 
   write_agent_instruction_file "$role" "$prompt_file"
 
+  if [[ "$role_worktree" == "$WORKING_DIR" ]]; then
+    role_script_dir="$SCRIPT_DIR"
+  fi
+
   case "$agent" in
     claude)
-      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$SCRIPT_DIR':\$PATH && cd '$role_worktree' && claude --append-system-prompt-file '$prompt_file' --permission-mode acceptEdits -n 'SwarmForge ${display}' \"\$(cat '$prompt_file')\""
+      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$role_script_dir':\$PATH && cd '$role_worktree' && claude --append-system-prompt-file '$prompt_file' --permission-mode acceptEdits -n 'SwarmForge ${display}' \"\$(cat '$prompt_file')\""
       ;;
     codex)
-      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$SCRIPT_DIR':\$PATH && cd '$role_worktree' && codex -C '$role_worktree' \"\$(cat '$prompt_file')\""
+      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$role_script_dir':\$PATH && cd '$role_worktree' && codex -C '$role_worktree' \"\$(cat '$prompt_file')\""
       ;;
     copilot)
-      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$SCRIPT_DIR':\$PATH && cd '$role_worktree' && copilot -C '$role_worktree' --name 'SwarmForge ${display}' -i \"\$(cat '$prompt_file')\""
+      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$role_script_dir':\$PATH && cd '$role_worktree' && copilot -C '$role_worktree' --name 'SwarmForge ${display}' -i \"\$(cat '$prompt_file')\""
       ;;
     grok)
-      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$SCRIPT_DIR':\$PATH && cd '$role_worktree' && grok --cwd '$role_worktree' --permission-mode acceptEdits --rules \"\$(cat '$prompt_file')\""
+      launch_cmd="export SWARMFORGE_ROLE='$role' && export PATH='$role_script_dir':\$PATH && cd '$role_worktree' && grok --cwd '$role_worktree' --permission-mode acceptEdits --rules \"\$(cat '$prompt_file')\""
       ;;
   esac
 
@@ -419,6 +438,7 @@ parse_config
 check_backend_dependencies
 prepare_workspace
 prepare_worktrees
+sync_worktree_scripts
 choose_cleanup_owner
 TERMINAL_BACKEND="$(detect_terminal_backend)"
 load_terminal_backend "$TERMINAL_BACKEND"
