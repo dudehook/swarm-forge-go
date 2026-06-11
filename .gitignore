@@ -5,5 +5,4 @@
 .worktrees/
 swarmtools/
 logs/
-agent_context/
 swarmforge/scripts/
