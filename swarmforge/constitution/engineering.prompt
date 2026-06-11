@@ -7,7 +7,7 @@
   - Java: install with Maven (`mvn`); mutation `github.com/unclebob/mutate4java`, CRAP `github.com/unclebob/crap4java`, DRY `github.com/unclebob/dry4java`.
 - For Clojure projects, prefer Babashka where possible.
 - For Clojure projects, prefer Speclj for unit and behavior tests.
-- For Speclj projects, use `github.com/unclebob/speclj-structure-check` to validate test syntax.
+- For Clojure or Babashka projects using Speclj, use `github.com/unclebob/speclj-structure-check` to validate test syntax. If a Speclj spec file changed, run the structure check before executing the relevant test command.
 - For Java projects, avoid using Maven to run tests; build dedicated test runners and run those instead.
 - Work in small, reviewable increments.
 - Prefer the simplest design that supports the current behavior and leaves clear options for the next step.
