@@ -105,17 +105,12 @@ ensure_initial_gitignore() {
 .swarmforge/
 .worktrees/
 logs/
-agent_context/
 EOF
     return
   fi
 
   if ! grep -qx 'logs/' "$gitignore_file"; then
     echo 'logs/' >> "$gitignore_file"
-  fi
-
-  if ! grep -qx 'agent_context/' "$gitignore_file"; then
-    echo 'agent_context/' >> "$gitignore_file"
   fi
 
   if ! grep -qx '.swarmforge/' "$gitignore_file"; then
@@ -135,7 +130,7 @@ ensure_runtime_git_excludes() {
   touch "$exclude_file"
 
   local pattern
-  for pattern in ".swarmforge/" ".worktrees/" "logs/" "agent_context/"; do
+  for pattern in ".swarmforge/" ".worktrees/" "logs/"; do
     if ! grep -qx "$pattern" "$exclude_file"; then
       echo "$pattern" >> "$exclude_file"
     fi
@@ -315,7 +310,7 @@ check_helper_scripts() {
 }
 
 prepare_workspace() {
-  mkdir -p "$WORKING_DIR/logs" "$WORKING_DIR/agent_context" "$STATE_DIR" "$PROMPTS_DIR" "$WORKTREES_DIR" "$TMUX_SOCKET_DIR"
+  mkdir -p "$WORKING_DIR/logs" "$STATE_DIR" "$PROMPTS_DIR" "$WORKTREES_DIR" "$TMUX_SOCKET_DIR"
   printf '%s\n' "$TMUX_SOCKET" > "$TMUX_SOCKET_FILE"
   check_helper_scripts
   write_sessions_file

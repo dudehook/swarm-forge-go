@@ -84,7 +84,7 @@ SwarmForge is a lightweight, tmux-based orchestration layer that:
 - Supports per-role backends such as `claude`, `codex`, `copilot`, or `grok`
 - Provides `notify-agent.sh` from the shared `swarmforge/scripts/` directory for active swarm handoffs
 - Creates git worktrees under `.worktrees/` for roles assigned to dedicated worktree names
-- Initializes a git repository in a new working directory and creates a first commit with `logs/` and `agent_context/` ignored
+- Initializes a git repository in a new working directory and creates a first commit with `logs/` ignored
 - Keeps all swarm state local to the working directory in `.swarmforge/`
 
 ## Core Features
