@@ -204,7 +204,7 @@ If a window uses `master` as its worktree name, SwarmForge does not create `.wor
 
 ## tmux Behavior
 
-SwarmForge uses a project-specific tmux socket recorded in `.swarmforge/tmux-socket`, so each project swarm is isolated from other tmux sessions. It also honors tmux `base-index` and `pane-base-index` settings when launching agents and sending notifications, so configurations that number windows or panes from `1` work without requiring users to change their tmux preferences.
+SwarmForge uses a project-specific tmux socket under `.swarmforge/tmux/` and records its path in `.swarmforge/tmux-socket`, so each project swarm is isolated from other tmux sessions without requiring agents to access a socket outside the project tree. It also honors tmux `base-index` and `pane-base-index` settings when launching agents and sending notifications, so configurations that number windows or panes from `1` work without requiring users to change their tmux preferences.
 
 ## Terminal Behavior
 
