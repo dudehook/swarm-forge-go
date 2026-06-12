@@ -21,12 +21,14 @@
 
 ## Handoff Format
 - For every outgoing handoff, write only the role-specific handoff body to `./tmp/<target-role>-handoff.txt`, then send it with `notify-agent.sh send <target-role> --file ./tmp/<target-role>-handoff.txt`.
-- `notify-agent.sh send` wraps the body with `message type`, `message id`, `sender role`, `target role`, and `message sequence` fields, archives the sent message, appends the sent logbook entry, and sends the message.
+- Before sending a handoff, commit all role-owned work and any required `logbook.jsonl` updates. Do not make another commit until `notify-agent.sh send` completes successfully.
+- `notify-agent.sh send` wraps the body with `message type`, `message id`, `sender role`, `target role`, `message sequence`, `branch name`, and 10-character `commit hash` fields, archives the sent message, appends the sent logbook entry, and sends the message.
+- Treat the generated `branch name` and `commit hash` fields as the authoritative state for the receiver to merge; do not type branch names or commit hashes into the handoff body.
 - `message id` values have this form: `YYYYMMDD-HHMMSS-XXXXXX`, where `XXXXXX` is a six-character random lowercase hexadecimal suffix. Message type, sender, target, and sequence are recorded in separate fields.
 - Start every handoff body with: `Re-read your role and constitution.`
 - The specifier invents a short, stable handoff name for each accepted specification handoff.
 - Every later handoff for that work must include the specifier handoff name.
-- Handoff bodies must report only essential state, not prescribe process. After the opening line, include exactly these fields and no other prose: specifier handoff name, branch name, and 10-character commit hash.
+- Handoff bodies must report only essential state, not prescribe process. After the opening line, include exactly this field and no other prose: specifier handoff name.
 - Do not tell the receiving role how to do its job, repeat your process, or ask it to continue sender-owned responsibilities. The normal request is: `Apply your own role rules to this state.`
 
 ## Receiving Handoffs
@@ -35,7 +37,7 @@
 - If `notify-agent.sh receive` reports `DO NOT PROCESS`, do not merge, apply, or otherwise act on that handoff; the helper has detected an out-of-order, duplicate, or stale message and has requested any required resend.
 - If a handoff sequence is greater than one more than the last processed sequence for that sender-target stream, `notify-agent.sh receive` sends a `resend-request` for the missing sequence range including the out-of-order handoff itself.
 - If a `resend-request` is received, `notify-agent.sh receive` resends the archived requested messages and exits without role-specific work.
-- After receiving a handoff, merge the sender branch state identified by the handoff branch name and 10-character commit hash into your assigned branch before applying your own role rules.
+- After receiving a handoff, merge the sender branch state identified by the protocol `branch name` and `commit hash` fields into your assigned branch before applying your own role rules.
 - When receiving a handoff, ignore sender process narrative and decide next actions only from your own role prompt, the constitution, and the current project state.
 
 ## Queued Messages
