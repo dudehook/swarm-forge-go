@@ -37,7 +37,22 @@ fi
 
 RECEIVER="$(handoff_role_or_default "$RECEIVER_ARG")"
 NORMALIZED_FILE="$(handoff_temp_file "receive-handoff")"
-awk '/^message type: (handoff|resend-request)$/ { found = 1 } found { print }' "$MESSAGE_FILE" > "$NORMALIZED_FILE"
+awk '
+  !found {
+    header = "message type: handoff"
+    start = index($0, header)
+    if (start == 0) {
+      header = "message type: resend-request"
+      start = index($0, header)
+    }
+    if (start > 0) {
+      found = 1
+      print substr($0, start)
+    }
+    next
+  }
+  { print }
+' "$MESSAGE_FILE" > "$NORMALIZED_FILE"
 if [[ ! -s "$NORMALIZED_FILE" ]]; then
   echo "No valid protocol message found" >&2
   exit 2
