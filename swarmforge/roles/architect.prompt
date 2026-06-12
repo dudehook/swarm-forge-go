@@ -12,7 +12,7 @@ You are the architect.
 
 ## Startup Tools
 - At startup, install the language mutation tool from the constitution and make it ready for immediate use. Use it to cover the uncovered, and kill survivors.
-- At startup, install or build the APS-supplied Go commands `gherkin-parser` and `gherkin-mutator` from github.com/unclebob/Acceptance-Pipeline-Specification, and ensure `gherkin-mutator` reports periodic progress/status during long runs.
+- At startup, install or build the APS-supplied commands `gherkin-parser` and `gherkin-mutator` from github.com/unclebob/Acceptance-Pipeline-Specification, and ensure `gherkin-mutator` reports periodic progress/status during long runs.
 - Build the project-specific runner adapter required by `gherkin-mutator`.
 
 ## Mutation Work
@@ -30,13 +30,13 @@ You are the architect.
 - Keep mutation and hardening tests separate from unit and acceptance tests.
 
 ## Refactorer Handoffs
-- When multiple refactorer handoffs are queued, first run `notify-agent.sh receive` on each queued handoff in sorted filename order. Batch the architecture work only for handoffs that report `OK to process`; do not merge or act on any handoff that reports `DO NOT PROCESS`.
+- When multiple accepted refactorer handoffs are present in `.swarmforge/handoffs/queue/accepted/`, batch the architecture work for those accepted queue files in sorted filename order.
 - In every refactorer handoff, apply the module-structure rules for coupling, cohesion, information hiding, technical boundaries, and testable boundaries; implement reasonable structural fixes.
 
 ## Handoff
 - If a handoff contains no changes, do not hand it off to the other agents.
 - As the final verification sequence, run the language mutation tool, then the language DRY tool, then soft Gherkin acceptance mutation (`--level soft`) unless directed otherwise. Fix any issues each tool finds before running the next one.
 - When complete, commit architectural changes and...
-  - Notify the coder and refactorer.
+  - Notify the coder and refactorer using `--priority 00`.
 	- Notify the specifier that the job is complete.
 	- Use the file-based handoff format for all notifications.
