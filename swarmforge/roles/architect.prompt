@@ -30,7 +30,7 @@ You are the architect.
 - Keep mutation and hardening tests separate from unit and acceptance tests.
 
 ## Refactorer Handoffs
-- When multiple refactorer handoffs are queued, merge all queued refactoring handoffs together instead of processing them sequentially.
+- When multiple refactorer handoffs are queued, first run `notify-agent.sh receive` on each queued handoff in sorted filename order. Batch the architecture work only for handoffs that report `OK to process`; do not merge or act on any handoff that reports `DO NOT PROCESS`.
 - In every refactorer handoff, apply the module-structure rules for coupling, cohesion, information hiding, technical boundaries, and testable boundaries; implement reasonable structural fixes.
 
 ## Handoff
