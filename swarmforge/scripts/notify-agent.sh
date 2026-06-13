@@ -66,6 +66,7 @@ find_project_dir() {
 PROJECT_DIR="$(find_project_dir)"
 SESSIONS_FILE="$PROJECT_DIR/.swarmforge/sessions.tsv"
 TMUX_SOCKET_FILE="$PROJECT_DIR/.swarmforge/tmux-socket"
+TMUX_ENV_FILE="$PROJECT_DIR/.swarmforge/tmux-env"
 
 if [[ ! -f "$SESSIONS_FILE" ]]; then
   echo "Sessions file not found: $SESSIONS_FILE" >&2
@@ -96,6 +97,11 @@ if [[ ! -f "$MESSAGE_FILE" ]]; then
   exit 1
 fi
 MESSAGE="$(< "$MESSAGE_FILE")"
+
+if [[ -z "${TMUX:-}" && -f "$TMUX_ENV_FILE" ]]; then
+  TMUX="$(< "$TMUX_ENV_FILE")"
+  export TMUX
+fi
 
 if [[ -n "${TMUX:-}" ]]; then
   tmux send-keys -t "$TARGET_SESSION" -l -- "$MESSAGE"
