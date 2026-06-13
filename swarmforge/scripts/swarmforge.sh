@@ -29,6 +29,7 @@ PROJECT_SOCKET_ID="$(printf '%s' "$WORKING_DIR" | cksum)"
 PROJECT_SOCKET_ID="${PROJECT_SOCKET_ID%% *}"
 TMUX_SOCKET="$TMUX_SOCKET_DIR/$PROJECT_SOCKET_ID.sock"
 TMUX_SOCKET_FILE="$STATE_DIR/tmux-socket"
+TMUX_ENV_FILE="$STATE_DIR/tmux-env"
 TERMINAL_BACKEND=""
 
 typeset -a ROLES=()
@@ -299,6 +300,12 @@ prepare_workspace() {
   write_sessions_file
 }
 
+write_tmux_env_file() {
+  local tmux_value
+  tmux_value="$(tmux -S "$TMUX_SOCKET" display-message -p '#{socket_path},#{pid},#{pane_id}')"
+  printf '%s\n' "$tmux_value" > "$TMUX_ENV_FILE"
+}
+
 prepare_worktrees() {
   local i worktree_name worktree_path branch_name
   for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
@@ -331,6 +338,7 @@ sync_worktree_scripts() {
     mkdir -p "$role_state_dir"
     cp "$SESSIONS_FILE" "$role_state_dir/sessions.tsv"
     cp "$TMUX_SOCKET_FILE" "$role_state_dir/tmux-socket"
+    cp "$TMUX_ENV_FILE" "$role_state_dir/tmux-env"
   done
 }
 
@@ -442,7 +450,6 @@ parse_config
 check_backend_dependencies
 prepare_workspace
 prepare_worktrees
-sync_worktree_scripts
 choose_cleanup_owner
 TERMINAL_BACKEND="$(detect_terminal_backend)"
 load_terminal_backend "$TERMINAL_BACKEND"
@@ -467,6 +474,8 @@ echo -e "${GREEN}Launching SwarmForge tmux sessions...${RESET}"
 for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
   create_role_session "${SESSIONS[$i]}" "${DISPLAY_NAMES[$i]}"
 done
+write_tmux_env_file
+sync_worktree_scripts
 
 echo -e "${GREEN}Starting agents...${RESET}"
 for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
