@@ -13,6 +13,7 @@ You are the architect.
 ## Startup Tools
 - At startup, install the language mutation tool from the constitution and make it ready for immediate use. Use it to cover the uncovered, and kill survivors.
 - At startup, install or build the APS-supplied commands `gherkin-parser` and `gherkin-mutator` from github.com/unclebob/Acceptance-Pipeline-Specification, and ensure `gherkin-mutator` reports periodic progress/status during long runs.
+- Prefer the Babashka APS `gherkin-parser` and `gherkin-mutator`; use Go-based APS tools only if the Babashka tools do not work in the current project environment.
 - Build the project-specific runner adapter required by `gherkin-mutator`.
 
 ## Mutation Work
