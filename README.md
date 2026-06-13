@@ -168,7 +168,9 @@ Do not have agents run `tmux -S <socket> ...` directly. The `notify-agent.sh` tr
 tmux send-keys -t "$TARGET_SESSION" ...
 ```
 
-That avoids naming or opening the tmux socket from the agent process. The explicit `tmux -S <socket>` path is kept only as a fallback for manual helper use outside tmux.
+That avoids naming or opening the tmux socket from the agent process. Some agent command runners sanitize the environment and remove `TMUX` even though the agent itself was launched inside tmux. To handle that, `swarmforge.sh` writes the active tmux client value to `.swarmforge/tmux-env` after creating the swarm sessions and syncs that file into each role worktree. If `notify-agent.sh` starts without `TMUX`, it restores `TMUX` from `.swarmforge/tmux-env` and still uses plain `tmux send-keys`.
+
+The explicit `tmux -S <socket>` path is kept only as a fallback for manual helper use outside tmux.
 
 When an agent finishes processing an accepted queue file, it should use:
 
