@@ -14,6 +14,8 @@
 ## Command Approval
 - Run handoffs exactly as `swarm-handoff` with no arguments after writing `.swarmforge/notify/request`.
 - Do not run `SWARMFORGE_ROLE=<role> swarm-handoff`, `./swarm-handoff`, an absolute path to `swarm-handoff`, `zsh -c swarm-handoff`, or any redirection/wrapper form for normal handoffs.
+- Never write, redirect, append, or pipe content to `swarm-handoff` or `./swarm-handoff`; it is the executable command, not a request file.
+- Write handoff request content only to `.swarmforge/notify/request` and handoff message content only to `./tmp/<target-role>-handoff.txt` or the explicitly named incoming-message file.
 - If `swarm-handoff` needs escalation, request reusable approval for the command prefix `["swarm-handoff"]`.
 
 ## Handoff Format
