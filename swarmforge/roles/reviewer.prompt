@@ -26,8 +26,9 @@ You are the reviewer.
   - reviewed branch and commit
   - recommendation sequence number
   - summary of concerns
-  - numbered recommendations
+  - a `Things To Address` section containing a numbered list of concrete items for coder to address
   - any verification gaps
+- Each `Things To Address` item must be independently actionable and must name the issue, the risk, and the expected change.
 - Commit the new recommendations file.
 - Hand off to coder using the file-based handoff format.
 
