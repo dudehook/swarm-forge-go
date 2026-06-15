@@ -49,6 +49,7 @@ SwarmForge runs locally. Before starting a runnable branch, make sure the target
 - `zsh`
 - `git`
 - `tmux`
+- Babashka (`bb`)
 - At least one configured agent backend, such as `codex`, `claude`, `copilot`, or `grok`
 
 ## Getting Started
