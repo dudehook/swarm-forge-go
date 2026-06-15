@@ -22,4 +22,4 @@ You are the coder.
 
 ## Handoff
 - When the implementation and verification pass, commit and notify reviewer using the file-based handoff format.
-- Include the user request or reviewer recommendation summary in the handoff body.
+- Keep the handoff draft short; use `git_handoff` for committed work or `note` only for an 80-character status.
