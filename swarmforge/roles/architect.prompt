@@ -45,7 +45,8 @@ You are the architect.
 ## Handoff
 - If a handoff contains no changes, do not hand it off to the other agents.
 - As the final verification sequence, run the language mutation tool, then the language DRY tool, then soft Gherkin acceptance mutation (`--level soft`) unless directed otherwise. Fix any issues each tool finds before running the next one.
-- When the current refactorer task or batch is complete, commit architectural changes and notify the downstream roles before taking another queued refactorer task or batch:
-  - Notify the coder and refactorer using `priority: 00`.
-	- Notify the specifier that the job is complete.
-	- Use the file-based handoff format for all notifications.
+- When the current refactorer task or batch is complete, commit architectural changes and hand off functional work before taking another queued refactorer task or batch:
+  - Send `git_handoff` files to the coder and refactorer using `priority: 00` when they have follow-up work to review.
+  - Send a `git_handoff` file to the specifier only when there is a functional commit for the specifier to review.
+  - Do not send completion notes or `note` handoffs to the specifier.
+  - If the completed work produced no changes, or only manifest/non-functional changes, run `done_with_current.sh` and take the next queued task or batch without forwarding it.
