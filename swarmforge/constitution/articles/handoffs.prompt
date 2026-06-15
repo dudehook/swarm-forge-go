@@ -43,6 +43,7 @@ message: <one line, max 80 chars>
 - Use only the task information printed by the helper scripts.
 - If a tmux wake-up arrives while already working on a task, ignore it.
 - When the task is fully complete, run `done_with_current_task.sh`.
+- `note` handoffs are tasks too; after reading or acting on a note, run `done_with_current_task.sh` before accepting any other handoff.
 - If `done_with_current_task.sh` prints `TASK: <path>`, treat the printed `PAYLOAD` as the next task.
 - If `done_with_current_task.sh` prints `NO_TASK`, stop waiting for work.
 - On restart, run `ready_for_next_task.sh` and follow its output.

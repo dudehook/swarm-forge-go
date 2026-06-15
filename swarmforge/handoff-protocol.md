@@ -364,9 +364,11 @@ Prompts should instruct agents to follow this loop:
 4. Use only the task information printed by the helper scripts.
 5. If a tmux wake-up arrives while already working on a task, ignore it.
 6. When the task is fully complete, run `done_with_current_task.sh`.
-7. If `done_with_current_task.sh` prints `TASK: <path>`, treat the printed
+7. Treat `note` handoffs as tasks too; after reading or acting on a note, run
+   `done_with_current_task.sh` before accepting any other handoff.
+8. If `done_with_current_task.sh` prints `TASK: <path>`, treat the printed
    `PAYLOAD` as the next task.
-8. If `done_with_current_task.sh` prints `NO_TASK`, stop waiting for work.
+9. If `done_with_current_task.sh` prints `NO_TASK`, stop waiting for work.
 
 On restart, an agent should run `ready_for_next_task.sh` and follow its output.
 
