@@ -93,11 +93,16 @@
 
 (defn notify! [socket session]
   (let [send-text (sh "tmux" "-S" socket "send-keys" "-t" session "-l" wake-message)
-        send-enter (sh "tmux" "-S" socket "send-keys" "-t" session "C-m")]
+        _ (Thread/sleep 150)
+        send-carriage-return (sh "tmux" "-S" socket "send-keys" "-t" session "C-m")
+        _ (Thread/sleep 50)
+        send-line-feed (sh "tmux" "-S" socket "send-keys" "-t" session "C-j")]
     (when-not (zero? (:exit send-text))
       (throw (ex-info "tmux send text failed" send-text)))
-    (when-not (zero? (:exit send-enter))
-      (throw (ex-info "tmux send enter failed" send-enter)))))
+    (when-not (zero? (:exit send-carriage-return))
+      (throw (ex-info "tmux send carriage return failed" send-carriage-return)))
+    (when-not (zero? (:exit send-line-feed))
+      (throw (ex-info "tmux send line feed failed" send-line-feed)))))
 
 (defn move-with-collision [source target-dir]
   (fs/create-dirs target-dir)
