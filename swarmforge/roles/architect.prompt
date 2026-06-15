@@ -37,13 +37,13 @@ You are the architect.
 - Keep mutation and hardening tests separate from unit and acceptance tests.
 
 ## Refactorer Handoffs
-- Process one accepted refactorer handoff from `.swarmforge/handoffs/queue/accepted/` at a time in sorted filename order.
+- Process one helper-delivered refactorer task at a time.
 - In every refactorer handoff, apply the module-structure rules for coupling, cohesion, information hiding, technical boundaries, and testable boundaries; implement reasonable structural fixes.
 
 ## Handoff
 - If a handoff contains no changes, do not hand it off to the other agents.
 - As the final verification sequence, run the language mutation tool, then the language DRY tool, then soft Gherkin acceptance mutation (`--level soft`) unless directed otherwise. Fix any issues each tool finds before running the next one.
-- When the accepted refactorer handoff being processed is complete, commit architectural changes and notify the downstream roles before taking another queued refactorer handoff:
-  - Notify the coder and refactorer using `--priority 00`.
+- When the refactorer task being processed is complete, commit architectural changes and notify the downstream roles before taking another queued refactorer task:
+  - Notify the coder and refactorer using `priority: 00`.
 	- Notify the specifier that the job is complete.
 	- Use the file-based handoff format for all notifications.
