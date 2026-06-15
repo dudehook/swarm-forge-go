@@ -155,7 +155,7 @@ In a runnable branch:
 6. Startup creates one git worktree per configured role under `.worktrees/`, unless the role is assigned to `master` or `none`.
 7. Startup syncs `swarmforge/scripts/` and missing shared constitution articles into each role worktree and puts that local scripts directory on each agent's `PATH`, so agents use local handoff helpers without reaching back into the master checkout.
 8. SwarmForge creates tmux sessions, opens terminal windows, and launches each configured backend in its assigned worktree.
-9. Roles communicate through daemon-delivered handoff files. Agents create validated drafts with `swarm_handoff.sh`, accept tasks with `ready_for_next_task.sh`, and complete tasks with `done_with_current_task.sh`.
+9. Roles communicate through daemon-delivered handoff files. Agents create validated drafts with `swarm_handoff.sh`, accept work with `ready_for_next.sh`, and complete work with `done_with_current.sh`.
 
 ## Handoff Protocol
 
@@ -164,8 +164,8 @@ Startup syncs the shared helper scripts into every role worktree under `swarmfor
 Agents interact with handoffs through three helper scripts:
 
 - `swarm_handoff.sh <draft-file>` validates and queues outbound handoffs.
-- `ready_for_next_task.sh` accepts the next available task and prints its sender, type, priority, and payload.
-- `done_with_current_task.sh` completes the current task and then delegates to `ready_for_next_task.sh`.
+- `ready_for_next.sh` accepts work using the role's configured receive mode.
+- `done_with_current.sh` completes the current task or batch using the role's configured receive mode.
 
 Outbound drafts use one of three message types. An awake message is a presence signal:
 
@@ -195,7 +195,7 @@ message: <one line, max 80 chars>
 
 The helper generates the delivered payload. Agents do not write long handoff bodies, branch names, queue filenames, or tmux commands.
 
-Recipient agents run `ready_for_next_task.sh` when notified or after restart. If it prints `NO_TASK`, they stop waiting for work. If it prints `TASK: <path>`, they treat the printed `PAYLOAD` as the task. If a wake-up arrives while an agent is already working, it can ignore the wake-up; `done_with_current_task.sh` checks for the next task after completing the current one.
+Recipient agents run `ready_for_next.sh` when notified or after restart. It dispatches to the task or batch helper configured for that role. If it prints `NO_TASK`, they stop waiting for work. If it prints `TASK: <path>`, they treat the printed `PAYLOAD` as the task. If it prints `BATCH: <path>`, they process the printed `BATCH_ITEM` entries in helper-delivered order. If a wake-up arrives while an agent is already working, it can ignore the wake-up; `done_with_current.sh` checks for the next task or batch after completing the current work.
 
 The durable handoff files and lifecycle headers replace the old logbook and resend queue. Runtime handoff state lives under `.swarmforge/handoffs/` in each worktree, with `outbox`, `sent`, `failed`, and `inbox` subdirectories. Agents should not hand-edit, merge, stage, or commit handoff runtime state. See [swarmforge/handoff-protocol.md](swarmforge/handoff-protocol.md) for the full protocol.
 
@@ -204,8 +204,10 @@ The durable handoff files and lifecycle headers replace the old logbook and rese
 `swarmforge/swarmforge.conf` defines the swarm window-by-window. Each line has this form:
 
 ```conf
-window <role> <agent> <worktree>
+window <role> <agent> <worktree> [task|batch]
 ```
+
+The optional receive mode defaults to `task`. Use `batch` for roles that should consume all currently queued equal-priority handoffs as one batch.
 
 You can define as many windows as your project needs. Each `role` maps to a corresponding prompt file at `swarmforge/roles/<role>.prompt`, so a config containing `architect`, `coder`, `reviewer`, `research`, and `release` windows would expect:
 

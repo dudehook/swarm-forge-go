@@ -196,7 +196,7 @@ fi
 TIMESTAMP_ID="$(handoff_id_timestamp)"
 CREATED_AT="$(handoff_timestamp)"
 SEQUENCE="$(handoff_next_sequence)"
-ID="${TIMESTAMP_ID}_${SEQUENCE}"
+ID="${TIMESTAMP_ID}_${SEQUENCE}_from_${SENDER}"
 RECIPIENT_SLUG="${(j:_:)RECIPIENTS}"
 FILENAME="${PRIORITY}_${TIMESTAMP_ID}_${SEQUENCE}_from_${SENDER}_to_${RECIPIENT_SLUG}.handoff"
 OUTBOX_DIR="$(handoff_state_dir)/outbox"

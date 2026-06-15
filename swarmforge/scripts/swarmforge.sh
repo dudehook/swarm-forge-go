@@ -42,6 +42,7 @@ typeset -a SESSIONS=()
 typeset -a DISPLAY_NAMES=()
 typeset -a WORKTREE_NAMES=()
 typeset -a WORKTREE_PATHS=()
+typeset -a RECEIVE_MODES=()
 typeset -A ROLE_INDEX=()
 typeset -A WORKTREE_INDEX=()
 typeset -i CLEANUP_OWNER_INDEX=1
@@ -193,7 +194,7 @@ parse_config() {
     exit 1
   fi
 
-  local line keyword role agent worktree line_no=0
+  local line keyword role agent worktree receive_mode line_no=0
   while IFS= read -r line || [[ -n "$line" ]]; do
     line_no=$((line_no + 1))
     line="${line#"${line%%[![:space:]]*}"}"
@@ -202,7 +203,7 @@ parse_config() {
 
     local -a fields
     fields=(${=line})
-    if (( ${#fields[@]} != 4 )); then
+    if (( ${#fields[@]} < 4 || ${#fields[@]} > 5 )); then
       echo -e "${RED}Error:${RESET} Invalid config line $line_no: $line"
       exit 1
     fi
@@ -211,6 +212,7 @@ parse_config() {
     role="${fields[2]}"
     agent="${fields[3]:l}"
     worktree="${fields[4]}"
+    receive_mode="${fields[5]:-task}"
 
     if [[ "$keyword" != "window" ]]; then
       echo -e "${RED}Error:${RESET} Unknown config directive on line $line_no: $keyword"
@@ -245,6 +247,14 @@ parse_config() {
         ;;
     esac
 
+    case "$receive_mode" in
+      task|batch) ;;
+      *)
+        echo -e "${RED}Error:${RESET} Invalid receive mode '$receive_mode' for role '$role' on line $line_no: expected task or batch"
+        exit 1
+        ;;
+    esac
+
     if [[ "$agent" != "none" && ! -f "$ROLES_DIR/$role.prompt" ]]; then
       echo -e "${RED}Error:${RESET} Missing role prompt $ROLES_DIR/$role.prompt"
       exit 1
@@ -259,6 +269,7 @@ parse_config() {
     SESSIONS+=("$(session_name_for_role "$role")")
     DISPLAY_NAMES+=("$(display_name_for_role "$role")")
     WORKTREE_NAMES+=("$worktree")
+    RECEIVE_MODES+=("$receive_mode")
     if [[ "$worktree" == "none" || "$worktree" == "master" ]]; then
       WORKTREE_PATHS+=("$WORKING_DIR")
     else
@@ -289,19 +300,20 @@ write_roles_file() {
   : > "$ROLES_FILE"
   local i
   for (( i = 1; i <= ${#ROLES[@]}; i++ )); do
-    printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
       "${ROLES[$i]}" \
       "${WORKTREE_NAMES[$i]}" \
       "${WORKTREE_PATHS[$i]}" \
       "${SESSIONS[$i]}" \
       "${DISPLAY_NAMES[$i]}" \
-      "${AGENTS[$i]}" >> "$ROLES_FILE"
+      "${AGENTS[$i]}" \
+      "${RECEIVE_MODES[$i]}" >> "$ROLES_FILE"
   done
 }
 
 check_helper_scripts() {
   local helper
-  for helper in swarm-handoff notify-agent.sh send-handoff.sh receive-handoff.sh resend-handoff.sh complete-handoff.sh handoff-lib.sh swarm_handoff.sh ready_for_next_task.sh done_with_current_task.sh handoffd.bb swarm-cleanup.sh swarm-window-watchdog.sh swarm-terminal-adapter.sh; do
+  for helper in handoff-lib.sh swarm_handoff.sh ready_for_next.sh done_with_current.sh ready_for_next_task.sh done_with_current_task.sh ready_for_next_batch.sh done_with_current_batch.sh handoffd.bb swarm-cleanup.sh swarm-window-watchdog.sh swarm-terminal-adapter.sh; do
     if [[ ! -x "$SCRIPT_DIR/$helper" ]]; then
       echo -e "${RED}Error:${RESET} Required helper script not found or not executable: $SCRIPT_DIR/$helper"
       exit 1
@@ -313,27 +325,6 @@ check_helper_scripts() {
       echo -e "${RED}Error:${RESET} Required terminal adapter not found or not executable: $SCRIPT_DIR/terminal-adapters/$helper"
       exit 1
     fi
-  done
-}
-
-install_shared_constitution_articles() {
-  local target_root="$1"
-  local target_dir="$target_root/swarmforge/constitution/articles"
-  local source_dir article target
-  local -a source_dirs
-
-  source_dirs=("$SCRIPT_DIR/shared-articles" "${SCRIPT_DIR:h}/constitution/articles")
-  mkdir -p "$target_dir"
-
-  for source_dir in "${source_dirs[@]}"; do
-    [[ -d "$source_dir" ]] || continue
-    for article in "$source_dir"/*(.N); do
-      [[ -f "$article" ]] || continue
-      target="$target_dir/${article:t}"
-      [[ "$article" == "$target" ]] && continue
-      [[ -e "$target" ]] && continue
-      cp "$article" "$target"
-    done
   done
 }
 
@@ -394,7 +385,6 @@ sync_worktree_scripts() {
     role_state_dir="$worktree_path/.swarmforge"
     mkdir -p "$role_scripts_dir"
     cp -R "$SCRIPT_DIR/." "$role_scripts_dir/"
-    install_shared_constitution_articles "$worktree_path"
     mkdir -p "$role_state_dir/notify"
     cp "$SESSIONS_FILE" "$role_state_dir/sessions.tsv"
     cp "$ROLES_FILE" "$role_state_dir/roles.tsv"
@@ -528,7 +518,6 @@ check_dependency bb
 detect_tmux_base_indexes
 initialize_git_repo
 ensure_runtime_git_excludes
-install_shared_constitution_articles "$WORKING_DIR"
 parse_config
 check_backend_dependencies
 prepare_workspace

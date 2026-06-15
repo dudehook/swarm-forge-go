@@ -8,7 +8,7 @@
 
 (def poll-ms 1000)
 (def wake-message
-  "You have new handoff mail. If you are not currently working on a task, run ready_for_next_task.sh.")
+  "You have new handoff mail. If idle, run ready_for_next.sh.")
 
 (defn usage []
   (binding [*out* *err*]
@@ -45,14 +45,15 @@
   (into {}
         (for [line (read-lines roles-file)
               :when (not (str/blank? line))
-              :let [[role worktree-name worktree-path session display agent]
+              :let [[role worktree-name worktree-path session display agent receive-mode]
                     (str/split line #"\t")]]
           [role {:role role
                  :worktree-name worktree-name
                  :worktree-path worktree-path
                  :session session
                  :display display
-                 :agent agent}])))
+                 :agent agent
+                 :receive-mode (or receive-mode "task")}])))
 
 (defn parse-message [path]
   (let [content (slurp (str path))
