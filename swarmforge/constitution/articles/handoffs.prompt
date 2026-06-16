@@ -1,12 +1,12 @@
 # Handoff Rules
 
 ## Startup Notification
-- After reading the constitution and your role prompt at startup, send an awake notification to `specifier` unless your role prompt says otherwise.
+- After reading the constitution and your role prompt at startup, send an awake notification to `coder` unless you are the coder.
 - Write a draft file with:
 
 ```text
 type: awake
-to: specifier
+to: coder
 priority: 50
 ```
 
@@ -46,9 +46,8 @@ commit: <10-character-commit-abbrev>
   functional project change. Complete the inbound task instead.
 - Treat manifest-only, audit-only, generated metadata, formatting-only, and
   other non-functional churn as no forwardable change.
-- Use the stable task name assigned by the specifier when forwarding work for
-  the same task. If the handoff starts new work, invent a short stable task
-  name.
+- Preserve the received task name when forwarding work for the same task. If the
+  handoff starts new work, invent a short stable task name.
 - For `note`, write:
 
 ```text
@@ -67,22 +66,16 @@ message: <one line, max 80 chars>
 
 ## Receiving Handoffs
 - When notified, run `ready_for_next.sh`.
-- `ready_for_next.sh` dispatches to the task or batch helper configured for
-  your role.
 - If it prints `NO_TASK`, stop waiting for work.
 - If it prints `TASK: <path>`, treat the printed `PAYLOAD` as the task.
 - If it prints `TASK_NAME: <name>`, use that as the stable task name for any
   forwardable work from that task.
-- If it prints `BATCH: <path>`, treat each printed `BATCH_ITEM` as part of the
-  current batch in helper-delivered order.
 - Use only the task information printed by the helper scripts.
 - If a tmux wake-up arrives while already working on a task, ignore it.
-- When the task or batch is fully complete, run `done_with_current.sh`.
+- When the task is fully complete, run `done_with_current.sh`.
 - `note` handoffs are tasks too; after reading or acting on a note, run
   `done_with_current.sh` before accepting any other handoff.
 - If `done_with_current.sh` prints `TASK: <path>`, treat the printed `PAYLOAD`
   as the next task.
-- If `done_with_current.sh` prints `BATCH: <path>`, treat each printed
-  `BATCH_ITEM` as part of the next batch in helper-delivered order.
 - If a done helper prints `NO_TASK`, stop waiting for work.
 - On restart, run `ready_for_next.sh` and follow its output.
