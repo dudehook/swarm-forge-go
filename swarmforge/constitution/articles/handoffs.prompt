@@ -1,12 +1,14 @@
 # Handoff Rules
 
 ## Startup Notification
-- After reading the constitution and your role prompt at startup, send an awake notification to `coder` unless you are the coder.
+- After reading the constitution and your role prompt at startup, send an awake
+  notification to the main branch agent, if any, unless you are that agent or
+  your role prompt says otherwise.
 - Write a draft file with:
 
 ```text
 type: awake
-to: coder
+to: <main-branch-role>
 priority: 50
 ```
 
