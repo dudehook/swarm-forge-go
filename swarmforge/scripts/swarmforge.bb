@@ -291,16 +291,6 @@
         (str "Read swarmforge/constitution.prompt, then read every file it refers to recursively, and obey all of those instructions.\n"
              "Read swarmforge/roles/" role ".prompt, then read every file it refers to recursively, and follow all of those instructions.\n")))
 
-(defn send-initial-grok-prompt! [ctx session display prompt-file]
-  (future
-    (Thread/sleep 3000)
-    (let [target (tmux-agent-target display (:tmux-pane-base-index ctx) session)]
-      (sh "tmux" "-S" (:tmux-socket ctx) "send-keys" "-t" target "-l" "--" (slurp (str prompt-file)))
-      (Thread/sleep 150)
-      (sh "tmux" "-S" (:tmux-socket ctx) "send-keys" "-t" target "C-m")
-      (Thread/sleep 50)
-      (sh "tmux" "-S" (:tmux-socket ctx) "send-keys" "-t" target "C-j"))))
-
 (defn launch-command [ctx index row]
   (let [role (:role row)
         agent (:agent row)
@@ -320,7 +310,7 @@
                   "claude" (str "claude --append-system-prompt-file " (sq (str prompt-file)) " --permission-mode acceptEdits -n " (sq (str "SwarmForge " display)) " \"$(cat " (sq (str prompt-file)) ")\"")
                   "codex" (str "codex -C " (sq (str role-worktree)) " \"$(cat " (sq (str prompt-file)) ")\"")
                   "copilot" (str "copilot -C " (sq (str role-worktree)) " --name " (sq (str "SwarmForge " display)) " -i \"$(cat " (sq (str prompt-file)) ")\"")
-                  "grok" (str "grok --cwd " (sq (str role-worktree)) " --permission-mode acceptEdits --rules \"$(cat " (sq (str prompt-file)) ")\"")))
+                  "grok" (str "grok --cwd " (sq (str role-worktree)) " --permission-mode acceptEdits --rules \"$(cat " (sq (str prompt-file)) ")\" --verbatim \"$(cat " (sq (str prompt-file)) ")\"")))
       (= index 0)
       (str "; exit_code=$?; SWARMFORGE_TERMINAL_BACKEND=" (sq (:terminal-backend ctx))
            " nohup " (sq (str (fs/path (:script-dir ctx) "swarm-cleanup.sh")))
@@ -337,8 +327,6 @@
     (sh "tmux" "-S" (:tmux-socket ctx) "send-keys" "-t"
         (tmux-agent-target display (:tmux-pane-base-index ctx) session)
         command "Enter")
-    (when (= "grok" (:agent row))
-      (send-initial-grok-prompt! ctx session display prompt-file))
     (println (str "  " cyan "[" display "]" reset " started in session " session))))
 
 (defn stop-handoff-daemon! [ctx]
@@ -510,10 +498,23 @@
               (fs/exists? local-script-dir) (assoc :script-dir local-script-dir))]
     (println (terminal-call-out ctx "terminal_open_session" "swarmforge-specifier" "SwarmForge Specifier" ""))))
 
+(defn test-launch-command! [root agent]
+  (let [ctx (assoc (context root) :terminal-backend "none")
+        row {:role "coder"
+             :agent agent
+             :session "swarmforge-coder"
+             :display-name "Coder"
+             :worktree-name "master"
+             :worktree-path (fs/path root)
+             :receive-mode "task"}]
+    (fs/create-dirs (:prompts-dir ctx))
+    (println (launch-command ctx 1 row))))
+
 (defn -main [& args]
   (case (first args)
     "--test-parse" (test-parse! (or (second args) (System/getProperty "user.dir")))
     "--test-terminal-bridge" (test-terminal-bridge! (or (second args) (System/getProperty "user.dir")) (nth args 2))
+    "--test-launch-command" (test-launch-command! (or (second args) (System/getProperty "user.dir")) (nth args 2))
     "--test-agent-start-delay" (println (env-long "SWARMFORGE_AGENT_START_DELAY_MS" 1500))
     (run-main! (or (first args) (System/getProperty "user.dir")))))
 

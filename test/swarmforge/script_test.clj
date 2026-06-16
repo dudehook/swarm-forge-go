@@ -165,6 +165,23 @@
     (is (= "2750" (str/trim (:out configured-result))))
     (is (= "1500" (str/trim (:out invalid-result))))))
 
+(deftest grok-launch-command-passes-initial-prompt
+  (let [root (tmp-dir)]
+    (try
+      (let [result (run {:dir root}
+                        (script "swarmforge.bb")
+                        "--test-launch-command"
+                        (str root)
+                        "grok")
+            command (:out result)]
+        (is (str/includes? command "grok --cwd "))
+        (is (str/includes? command "--rules \"$(cat "))
+        (is (str/includes? command "--verbatim \"$(cat "))
+        (is (str/includes? command ".swarmforge/prompts/coder.md"))
+        (is (fs/exists? (fs/path root ".swarmforge/prompts/coder.md"))))
+      (finally
+        (fs/delete-tree root)))))
+
 (deftest window-watchdog-rewrites-window-state-and-id-list
   (let [root (tmp-dir)
         state-file (fs/path root "windows.tsv")
