@@ -124,27 +124,7 @@ identifies the specific recipient copy.
 
 ## Message Types
 
-Agents may request only three message types.
-
-### `awake`
-
-Used for liveness and simple wake-up messages.
-
-Draft:
-
-```text
-type: awake
-to: two
-priority: 50
-```
-
-Generated body:
-
-```text
-awake
-```
-
-The `awake` message does not include the constitution and role reminder.
+Agents may request only two message types.
 
 ### `git_handoff`
 
@@ -227,7 +207,7 @@ Responsibilities:
 - Serialize sequence updates with an atomic lock so concurrent handoff creation
   in one worktree cannot reuse the same sequence.
 - Validate `priority` as `00` through `99`.
-- Validate `type` as `awake`, `git_handoff`, or `note`.
+- Validate `type` as `git_handoff` or `note`.
 - Validate `git_handoff` commits as real, unambiguous commits.
 - Canonicalize valid commit abbreviations.
 - Generate `role` from the current sender role for `git_handoff`.

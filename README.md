@@ -167,15 +167,7 @@ Agents interact with handoffs through three helper scripts:
 - `ready_for_next.sh` accepts work using the role's configured receive mode.
 - `done_with_current.sh` completes the current task or batch using the role's configured receive mode.
 
-Outbound drafts use one of three message types. An awake message is a presence signal:
-
-```text
-type: awake
-to: <role>[,<role>...]
-priority: NN
-```
-
-A git handoff points the recipient at a committed state. The commit abbreviation must be exactly 10 hexadecimal characters; `swarm_handoff.sh` validates that it resolves to a single commit and canonicalizes it before queuing the handoff.
+Outbound drafts use one of two message types. A git handoff points the recipient at a committed state. The commit abbreviation must be exactly 10 hexadecimal characters; `swarm_handoff.sh` validates that it resolves to a single commit and canonicalizes it before queuing the handoff.
 
 ```text
 type: git_handoff

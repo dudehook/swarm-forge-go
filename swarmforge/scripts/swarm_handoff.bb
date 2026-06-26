@@ -8,9 +8,6 @@
 (def usage-text
   (str "Usage: swarm_handoff.sh <draft-file>\n\n"
        "Draft formats:\n\n"
-       "type: awake\n"
-       "to: <role>[,<role>...]\n"
-       "priority: NN\n\n"
        "type: git_handoff\n"
        "to: <role>[,<role>...]\n"
        "priority: NN\n"
@@ -23,7 +20,7 @@
 
 (def reserved-fields #{"id" "from" "role" "recipient" "created_at" "enqueued_at" "dequeued_at" "completed_at"})
 (def allowed-fields #{"type" "to" "priority" "task" "commit" "message"})
-(def allowed-types #{"awake" "git_handoff" "note"})
+(def allowed-types #{"git_handoff" "note"})
 
 (defn usage []
   (binding [*out* *err*]
@@ -183,9 +180,6 @@
         [recipients recipient-errors] (validate-recipients to)
         field-errors (for [field ordered
                            :let [valid? (case [type field]
-                                          ["awake" "type"] true
-                                          ["awake" "to"] true
-                                          ["awake" "priority"] true
                                           ["git_handoff" "type"] true
                                           ["git_handoff" "to"] true
                                           ["git_handoff" "priority"] true
@@ -203,7 +197,7 @@
                       (str/blank? to) (conj "Missing required header 'to'.")
                       (str/blank? priority) (conj "Missing required header 'priority'.")
                       (and (not (str/blank? type)) (not (allowed-types type)))
-                      (conj (format "Header 'type' must be one of awake, git_handoff, or note; got '%s'." type))
+                      (conj (format "Header 'type' must be one of git_handoff or note; got '%s'." type))
                       (and (not (str/blank? priority)) (not (valid-priority? priority)))
                       (conj (format "Header 'priority' must be two digits from 00 to 99; got '%s'." priority)))
         [canonical commit-error]
@@ -270,7 +264,6 @@
 
 (defn body [type sender canonical-commit note-message]
   (case type
-    "awake" "awake"
     "git_handoff" (str "Re-read your role and constitution.\n\nmerge_and_process " sender " " canonical-commit)
     "note" (str "Re-read your role and constitution.\n\n" note-message)))
 
