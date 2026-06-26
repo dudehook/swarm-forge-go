@@ -1,23 +1,8 @@
 # Handoff Rules
 
-## Startup Notification
-- If your role is `reviewer`, after reading the constitution and your role prompt at startup, send an awake notification to `coder`.
-- If your role is `coder`, do not send a startup awake notification.
-- To send the reviewer awake notification, write a draft file with:
-
-```text
-type: awake
-to: coder
-priority: 50
-```
-
-- Run `swarm_handoff.sh <draft-file>`.
-- This startup notification is only a presence signal; it does not replace any role-specific handoff rule.
-
 ## Sending Handoffs
 - Write a draft handoff file with only structured headers, then run `swarm_handoff.sh <draft-file>`.
 - Use only these message types:
-  - `awake`
   - `git_handoff`
   - `note`
 - Do not send `note` handoffs unless the user, role prompt, or constitution
@@ -25,14 +10,6 @@ priority: 50
 - When blocked by ambiguity, contradiction, or test/specification conflict,
   stop and ask for clarification; do not send a `note` handoff unless one of
   the explicit authorities above directed that note.
-- For `awake`, write:
-
-```text
-type: awake
-to: <role>[,<role>...]
-priority: NN
-```
-
 - For `git_handoff`, commit first, then write:
 
 ```text
