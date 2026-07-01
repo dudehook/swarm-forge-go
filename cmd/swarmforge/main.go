@@ -11,8 +11,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"unsafe"
 
 	"github.com/dudehook/swarmforge/internal/config"
 	"github.com/dudehook/swarmforge/internal/daemon"
@@ -173,13 +176,63 @@ func runInit(args []string) error {
 	fs.BoolVar(&opts.Yolo, "yolo", false, "add --yolo (auto-approve) to every role")
 	fs.BoolVar(&opts.Force, "force", false, "overwrite an existing swarmforge/ directory")
 	fs.BoolVar(&listOnly, "list-templates", false, "list available templates and exit")
+	var noEdit bool
+	fs.BoolVar(&noEdit, "no-edit", false, "with --new, do not open $EDITOR on project.prompt afterward")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if listOnly {
 		return listTemplates(opts.TemplatesDir)
 	}
-	return scaffold.Init(os.Stdout, opts)
+	if err := scaffold.Init(os.Stdout, opts); err != nil {
+		return err
+	}
+	// For a freshly created project, drop the user into the project article so
+	// they can fill in their task. (A child process can't cd the parent shell,
+	// so we open the editor in the project dir and print the cd next-step.)
+	if opts.New {
+		if target, err := filepath.Abs(opts.TargetDir); err == nil {
+			openProjectArticle(target, noEdit)
+		}
+	}
+	return nil
+}
+
+// openProjectArticle opens $EDITOR (default vi) on the project's project.prompt,
+// with the editor's working directory set to the project. Skipped when noEdit is
+// set, when the file is absent, or when stdin is not a terminal (so it never
+// blocks in scripts/CI).
+func openProjectArticle(projectDir string, noEdit bool) {
+	promptPath := filepath.Join(projectDir, "swarmforge", "constitution", "articles", "project.prompt")
+	if _, err := os.Stat(promptPath); err != nil {
+		return
+	}
+	nextStep := fmt.Sprintf("Next: cd %s && swarmforge up", projectDir)
+	if noEdit || !stdinIsTerminal() {
+		fmt.Printf("Edit %s to describe your task.\n%s\n", promptPath, nextStep)
+		return
+	}
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi"
+	}
+	fields := strings.Fields(editor)
+	cmd := exec.Command(fields[0], append(fields[1:], promptPath)...)
+	cmd.Dir = projectDir
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "could not open editor %q: %v\n", editor, err)
+	}
+	fmt.Println(nextStep)
+}
+
+// stdinIsTerminal reports whether stdin is a real terminal (not a pipe, file, or
+// /dev/null). It uses the TCGETS ioctl, which only succeeds on a tty — a plain
+// character-device check is not enough (/dev/null is a character device too).
+func stdinIsTerminal() bool {
+	var termios syscall.Termios
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, os.Stdin.Fd(), syscall.TCGETS, uintptr(unsafe.Pointer(&termios)))
+	return errno == 0
 }
 
 // runTemplates lists available templates.
