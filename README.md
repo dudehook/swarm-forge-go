@@ -6,6 +6,17 @@ Do not spend any money on a bankrbot SWARM token.
 
 **A disciplined tmux-based agent orchestration platform that turns swarms of AI agents into reliable, professional software engineers.**
 
+> **Note: this is a fork.** The upstream project is Robert C. Martin's
+> [unclebob/swarm-forge](https://github.com/unclebob/swarm-forge), a Babashka
+> (Clojure) implementation. This fork adds a **Go port** targeting Linux + zsh +
+> tmux — a single dependency-free binary that reimplements the orchestrator and
+> handoff system. See [`GO_PORT.md`](GO_PORT.md) for status and
+> [`docs/how-swarmforge-works.md`](docs/how-swarmforge-works.md) for a walkthrough
+> of how it all fits together. The original Babashka/Clojure scripts have been
+> removed from this fork (they live in the upstream repo and this fork's git
+> history); the documentation below describes that upstream design, which the Go
+> port reimplements.
+
 ## Intent
 
 This `main` branch is documentary: it explains the system and carries the shared operational scripts and default constitution articles. The runnable workflow branches carry the project-facing configurations, role prompts, and local constitution articles that define specific workflows.
