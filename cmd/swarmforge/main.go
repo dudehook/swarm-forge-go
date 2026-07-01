@@ -26,6 +26,7 @@ import (
 	"github.com/dudehook/swarmforge/internal/scaffold"
 	"github.com/dudehook/swarmforge/internal/send"
 	"github.com/dudehook/swarmforge/internal/terminal"
+	"github.com/dudehook/swarmforge/internal/tui"
 )
 
 func main() {
@@ -77,6 +78,8 @@ func dispatch(cmd string, args []string) error {
 		return runInWorkDir(orchestrator.Down)
 	case "windows", "open-windows":
 		return runWindows()
+	case "tui", "dashboard":
+		return runTui()
 	case "handoffd":
 		return runDaemon(args)
 	case "stop-daemon", "stop_handoff_daemon":
@@ -144,6 +147,7 @@ func runInboxDirect(fn func(out io.Writer, workDir string) error) error {
 // instead of attaching the terminal to the first session.
 func runUp(args []string) error {
 	opts := orchestrator.Options{Attach: true}
+	var wantTUI bool
 	for _, a := range args {
 		switch a {
 		case "--no-attach":
@@ -152,13 +156,38 @@ func runUp(args []string) error {
 			opts.DryRun = true
 		case "--windows", "-w":
 			opts.Windows = true
+		case "--tui":
+			wantTUI = true
+			opts.Attach = false
 		}
 	}
 	workDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	return orchestrator.Up(os.Stdout, workDir, opts)
+	if err := orchestrator.Up(os.Stdout, workDir, opts); err != nil {
+		return err
+	}
+	if wantTUI && !opts.DryRun {
+		return tui.Run(workDir)
+	}
+	return nil
+}
+
+// runTui opens the read-only dashboard for the swarm in the current directory.
+func runTui() error {
+	if !stdinIsTerminal() {
+		return &handoff.ExitError{Code: 1, Message: "swarmforge tui requires an interactive terminal"}
+	}
+	workDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	root, err := project.Root(workDir)
+	if err != nil {
+		return &handoff.ExitError{Code: 1, Message: "No SwarmForge project here (run 'swarmforge up' first)."}
+	}
+	return tui.Run(root)
 }
 
 // runInit scaffolds the current (or a new) directory into a SwarmForge project
@@ -342,10 +371,11 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  templates                 list available templates")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Swarm commands:")
-	fmt.Fprintln(os.Stderr, "  up [--windows|--no-attach|--dry-run]")
+	fmt.Fprintln(os.Stderr, "  up [--windows|--tui|--no-attach|--dry-run]")
 	fmt.Fprintln(os.Stderr, "                            launch the swarm from swarmforge/swarmforge.conf")
 	fmt.Fprintln(os.Stderr, "  down                      stop the daemon and kill all sessions")
 	fmt.Fprintln(os.Stderr, "  windows                   open a terminal window per agent (swarm must be running)")
+	fmt.Fprintln(os.Stderr, "  tui                       open the read-only dashboard for a running swarm")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Handoff commands:")
 	fmt.Fprintln(os.Stderr, "  handoff send <draft>      validate and queue a handoff draft")

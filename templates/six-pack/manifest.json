@@ -1,0 +1,6 @@
+{
+  "name": "six-pack",
+  "description": "Six-agent full pipeline: specifier -> coder -> cleaner (batch) -> architect -> hardender (batch) -> QA.",
+  "defaultAgent": "claude",
+  "roles": ["specifier", "coder", "cleaner", "architect", "hardender", "QA"]
+}

@@ -31,8 +31,14 @@ internal/daemon/               handoff delivery daemon + stop (handoffd.bb, stop
 internal/orchestrator/         up/down: git, worktrees, tmux, shims, daemon, attach (run-main!)
 internal/terminal/             open a native terminal window per agent (Alacritty by default)
 internal/scaffold/             `swarmforge init` — scaffold a project from a template + commit it
+internal/monitor/              dependency-free swarm-state reader (Snapshot: info/agents/messages/tools)
+internal/tui/                  Bubble Tea read-only dashboard (info, agents, mailbox, tools)
 templates/                     canonical template sources (installed to the user templates dir)
 ```
+
+Dependencies: the core (everything except the TUI) is stdlib-only. `internal/tui`
+adds Bubble Tea (`bubbletea` + `lipgloss` + `bubbles`); `internal/monitor` that
+feeds it is stdlib-only and independently testable.
 
 ## Build & test
 
@@ -92,10 +98,14 @@ Done (ported + tested):
 - [x] `up` flags: `--no-attach` (headless), `--dry-run`/`-n` (parse + plan), `--windows`/`-w` (per-agent windows)
 - [x] `terminal` — `swarmforge windows` opens one native terminal (Alacritty default,
       `SWARMFORGE_TERMINAL` override) per agent attached to its tmux session
+- [x] `monitor` + `tui` — `swarmforge tui` (and `up --tui`): read-only Bubble Tea dashboard
+      polling swarm state (info panel, per-agent status, scrolling mailbox feed, tool-availability
+      checklist). `monitor` is a stdlib-only Snapshot reader; `tui` renders it.
 - [x] `scaffold` — `swarmforge init` / `swarmforge templates`: scaffold a project from a
       disk template (user dir: `--templates-dir` > `$SWARMFORGE_TEMPLATES_DIR` >
       `~/.config/swarmforge/templates`), substitute `{{AGENT}}`/`{{PROJECT}}`, optional
-      `--yolo`/`--new`/`--force`, then commit the scaffolding. Ships the `coding-pair` template.
+      `--yolo`/`--new`/`--force`, then commit the scaffolding. Ships the `coding-pair`,
+      `four-pack`, and `six-pack` coding templates (ported from the upstream branches).
 
 Tested:
 - handoff subsystem: black-box tests ported from handoff_test.clj (all pass)
