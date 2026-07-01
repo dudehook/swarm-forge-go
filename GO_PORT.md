@@ -11,8 +11,9 @@ Scope decisions:
 - One binary with subcommands; the agent-facing commands keep their original
   names via PATH shims that `up` will install.
 
-A reference checkout of the runnable `two-pack` branch lives at
-`../swarm-forge-two-pack` (a git worktree of this repo) for end-to-end testing.
+The upstream Babashka configs (two-pack/four-pack/six-pack) have been captured as
+Go `templates/` and are no longer kept as local branches; they remain on `origin`
+if ever needed for re-templatizing (`git checkout -b <name> origin/<name>`).
 
 ## Layout
 
