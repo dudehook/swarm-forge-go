@@ -36,6 +36,7 @@ var preferredHeaderOrder = []string{
 type Daemon struct {
 	root       string
 	daemonDir  string
+	stateDir   string
 	rolesFile  string
 	socketFile string
 	pidFile    string
@@ -59,6 +60,7 @@ func New(root string) *Daemon {
 	daemonDir := filepath.Join(stateDir, "daemon")
 	return &Daemon{
 		root:       root,
+		stateDir:   stateDir,
 		daemonDir:  daemonDir,
 		rolesFile:  filepath.Join(stateDir, "roles.tsv"),
 		socketFile: filepath.Join(stateDir, "tmux-socket"),
@@ -89,6 +91,10 @@ func (d *Daemon) Run() error {
 	d.log("started")
 	defer d.log("stopped")
 	for !d.shouldStop() {
+		if d.stateGone() {
+			d.log("state directory removed; stopping")
+			break
+		}
 		d.pollOnce()
 		d.sleepPoll(pollInterval)
 	}
@@ -97,6 +103,15 @@ func (d *Daemon) Run() error {
 
 func (d *Daemon) shouldStop() bool {
 	return d.stopping.Load() || fileExists(d.stopFile)
+}
+
+// stateGone reports whether the swarm's .swarmforge state directory has
+// disappeared (e.g. the project was deleted or reset). When it has, the daemon
+// can do nothing useful, so it exits — which also releases any sleep inhibitor
+// that was wrapping it.
+func (d *Daemon) stateGone() bool {
+	_, err := os.Stat(d.stateDir)
+	return err != nil
 }
 
 func (d *Daemon) sleepPoll(total time.Duration) {

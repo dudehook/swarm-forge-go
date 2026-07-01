@@ -45,9 +45,15 @@ func TestUpLaunchesSwarmAndDownTearsDown(t *testing.T) {
 	}
 
 	socketFile := filepath.Join(root, ".swarmforge", "tmux-socket")
+	pidFile := filepath.Join(root, ".swarmforge", "daemon", "handoffd.pid")
+	// Guarantee teardown even if a later assertion fails, so a real handoff
+	// daemon is never orphaned (which would keep holding a sleep inhibitor).
 	t.Cleanup(func() {
 		if sock := strings.TrimSpace(readOrEmpty(socketFile)); sock != "" {
 			exec.Command("tmux", "-S", sock, "kill-server").Run()
+		}
+		if pid := strings.TrimSpace(readOrEmpty(pidFile)); pid != "" {
+			exec.Command("kill", "-TERM", pid).Run()
 		}
 	})
 
@@ -77,7 +83,6 @@ func TestUpLaunchesSwarmAndDownTearsDown(t *testing.T) {
 		t.Error("roles.tsv not written")
 	}
 	// Daemon is running (it starts asynchronously, so poll briefly).
-	pidFile := filepath.Join(root, ".swarmforge", "daemon", "handoffd.pid")
 	var pid string
 	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); {
 		if pid = strings.TrimSpace(readOrEmpty(pidFile)); pid != "" {
