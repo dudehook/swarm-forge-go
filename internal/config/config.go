@@ -239,6 +239,38 @@ func (c *Context) WriteSessionsFile() error {
 	return os.WriteFile(c.SessionsFile, []byte(b.String()), 0o644)
 }
 
+// SessionRow is one parsed line of sessions.tsv.
+type SessionRow struct {
+	Role    string
+	Session string
+	Display string
+	Agent   string
+}
+
+// ReadSessions reads .swarmforge/sessions.tsv for the given root.
+func ReadSessions(root string) ([]SessionRow, error) {
+	data, err := os.ReadFile(filepath.Join(root, ".swarmforge", "sessions.tsv"))
+	if err != nil {
+		return nil, err
+	}
+	var rows []SessionRow
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		f := strings.Split(line, "\t")
+		get := func(i int) string {
+			if i < len(f) {
+				return f[i]
+			}
+			return ""
+		}
+		// columns: index, role, session, display, agent
+		rows = append(rows, SessionRow{Role: get(1), Session: get(2), Display: get(3), Agent: get(4)})
+	}
+	return rows, nil
+}
+
 // WriteRolesFile writes .swarmforge/roles.tsv (the file the handoff tooling reads).
 func (c *Context) WriteRolesFile() error {
 	var b strings.Builder

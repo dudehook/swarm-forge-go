@@ -29,6 +29,7 @@ internal/config/               swarmforge.conf parser + context/paths/tmux socke
 internal/launch/               agent command construction, sleep inhibitor, base-index (swarmforge.bb)
 internal/daemon/               handoff delivery daemon + stop (handoffd.bb, stop_handoff_daemon.bb)
 internal/orchestrator/         up/down: git, worktrees, tmux, shims, daemon, attach (run-main!)
+internal/terminal/             open a native terminal window per agent (Alacritty by default)
 ```
 
 ## Build & test
@@ -51,6 +52,11 @@ swarmforge down
 
 # Normal interactive launch (attaches your terminal to the first session):
 swarmforge up
+
+# Open one native terminal window per agent (Alacritty by default):
+swarmforge up --windows        # launch + fan out into per-agent windows
+swarmforge windows             # or, against an already-running swarm
+#   override the emulator with SWARMFORGE_TERMINAL=<cmd> (falls back to `<term> -e ...`)
 ```
 
 Real end-to-end with the `claude` backend: point a project's `swarmforge.conf`
@@ -75,7 +81,9 @@ Done (ported + tested):
 - [x] CLI: `up`, `down`, `handoffd`, `stop-daemon`, `handoff send`,
       `ready-for-next[-task|-batch]`, `done-with-current[-task|-batch]`
 
-- [x] `up` flags: `--no-attach` (headless) and `--dry-run`/`-n` (parse + plan, no side effects)
+- [x] `up` flags: `--no-attach` (headless), `--dry-run`/`-n` (parse + plan), `--windows`/`-w` (per-agent windows)
+- [x] `terminal` — `swarmforge windows` opens one native terminal (Alacritty default,
+      `SWARMFORGE_TERMINAL` override) per agent attached to its tmux session
 
 Tested:
 - handoff subsystem: black-box tests ported from handoff_test.clj (all pass)
@@ -97,6 +105,11 @@ Remaining:
 - [ ] Optional polish: colored banners, top-level `--help`
 
 ## Mapping from the original scripts
+
+The original Babashka/Clojure sources have been removed from this fork (see them
+in the upstream repo or this fork's git history). This table records what each Go
+package was ported from.
+
 
 | Original (.bb)                  | Go                                   |
 |---------------------------------|--------------------------------------|

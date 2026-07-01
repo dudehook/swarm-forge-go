@@ -19,6 +19,7 @@ import (
 	"github.com/dudehook/swarmforge/internal/handoff"
 	"github.com/dudehook/swarmforge/internal/launch"
 	"github.com/dudehook/swarmforge/internal/project"
+	"github.com/dudehook/swarmforge/internal/terminal"
 )
 
 const agentWindow = "swarm"
@@ -44,6 +45,9 @@ type Options struct {
 	// DryRun parses and validates the config and prints the launch plan without
 	// creating sessions, worktrees, or starting agents.
 	DryRun bool
+	// Windows opens one native terminal window per agent (instead of attaching
+	// the current terminal to the first session).
+	Windows bool
 }
 
 // Up runs the full launch sequence for the project at workDir.
@@ -138,6 +142,17 @@ func Up(out io.Writer, workDir string, opts Options) error {
 	fmt.Fprintf(out, "Tip: reattach with 'tmux -S %s attach-session -t <session>'.\n", c.TmuxSocket)
 
 	first := c.Roles[0].Session
+	if opts.Windows {
+		fmt.Fprintln(out, "Opening a terminal window per agent...")
+		windows := make([]terminal.Window, len(c.Roles))
+		for i, r := range c.Roles {
+			windows[i] = terminal.Window{Title: "SwarmForge " + r.DisplayName, Session: r.Session}
+		}
+		if err := terminal.OpenWindows(out, c.TmuxSocket, windows); err != nil {
+			return err
+		}
+		return nil
+	}
 	if !opts.Attach {
 		fmt.Fprintf(out, "Swarm running (headless). Attach with: tmux -S %s attach-session -t %s\n", c.TmuxSocket, first)
 		return nil
