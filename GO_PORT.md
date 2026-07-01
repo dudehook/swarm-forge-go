@@ -30,6 +30,8 @@ internal/launch/               agent command construction, sleep inhibitor, base
 internal/daemon/               handoff delivery daemon + stop (handoffd.bb, stop_handoff_daemon.bb)
 internal/orchestrator/         up/down: git, worktrees, tmux, shims, daemon, attach (run-main!)
 internal/terminal/             open a native terminal window per agent (Alacritty by default)
+internal/scaffold/             `swarmforge init` — scaffold a project from a template + commit it
+templates/                     canonical template sources (installed to the user templates dir)
 ```
 
 ## Build & test
@@ -43,6 +45,12 @@ go build -o swarmforge ./cmd/swarmforge
 ## Try it
 
 ```sh
+# Set up a project (templates live in ~/.config/swarmforge/templates, nothing embedded):
+swarmforge templates                          # list installed templates
+swarmforge init -t coding-pair --agent claude # add SwarmForge to the current repo
+swarmforge init --new --dir myproj -t coding-pair --yolo   # or a fresh project
+#   init writes swarmforge/, ensures .gitignore, and commits the scaffolding
+
 # Validate a project's config without launching anything:
 swarmforge up --dry-run        # parses swarmforge/swarmforge.conf, prints the plan
 
@@ -84,6 +92,10 @@ Done (ported + tested):
 - [x] `up` flags: `--no-attach` (headless), `--dry-run`/`-n` (parse + plan), `--windows`/`-w` (per-agent windows)
 - [x] `terminal` — `swarmforge windows` opens one native terminal (Alacritty default,
       `SWARMFORGE_TERMINAL` override) per agent attached to its tmux session
+- [x] `scaffold` — `swarmforge init` / `swarmforge templates`: scaffold a project from a
+      disk template (user dir: `--templates-dir` > `$SWARMFORGE_TEMPLATES_DIR` >
+      `~/.config/swarmforge/templates`), substitute `{{AGENT}}`/`{{PROJECT}}`, optional
+      `--yolo`/`--new`/`--force`, then commit the scaffolding. Ships the `coding-pair` template.
 
 Tested:
 - handoff subsystem: black-box tests ported from handoff_test.clj (all pass)
