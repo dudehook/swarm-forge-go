@@ -5,7 +5,7 @@
 - If your assigned worktree is `master`, work in the main project checkout on its current branch; do not expect or create a `.worktrees/<role>` directory for that role.
 - Work only in your assigned branch or worktree.
 - Do not inspect, diff, merge, or base work on another branch unless that branch is specifically named in a handoff or explicit user instruction.
-- Do not run `./swarm` from an agent worktree to repair helper scripts. If handoff helper scripts are missing from PATH, stop and report the startup failure.
+- Do not attempt to reinstall or repair the handoff helper commands yourself. If the handoff helper commands (such as `ready_for_next.sh` or `swarm_handoff.sh`) are missing from PATH, stop and report the startup failure.
 
 ## Check-In Comments
 - Prefix every check-in comment with your role name in this form: `By <role>.`
