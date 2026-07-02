@@ -84,6 +84,11 @@ points to; then read `swarmforge/roles/<role>.prompt` and follow it."*
   specifics.
 - **`swarmforge/roles/<role>.prompt`** is the *per-role* job description — what the
   role owns, what it must not touch, and when and how it hands off.
+- **`swarmforge/skills/`** holds reusable *skills* — procedures, checklists, and
+  playbooks. A Skills constitution article tells agents to scan
+  `swarmforge/skills/README.md` and pull in a skill file when its "Use when"
+  matches the task. Skills refine *how* work is done without bloating the base
+  prompt, and being plain prompt text they work with any agent backend.
 
 This separation is the source of SwarmForge's flexibility: the **mechanism**
 (handoffs, worktrees, tmux) is fixed, while the **behavior** is defined entirely by
@@ -301,6 +306,7 @@ project/
 │   ├── constitution.prompt           #   shared-rules entrypoint
 │   ├── constitution/articles/*.prompt#   shared rules (engineering, workflow, handoffs, project)
 │   ├── roles/<role>.prompt           #   per-role job descriptions
+│   ├── skills/                       #   reusable skills (playbooks) + README index
 │   └── scripts/                      #   PATH shims to the swarmforge binary (auto-generated at launch, not committed)
 ├── .swarmforge/                      # swarm STATE (auto-managed, git-ignored)
 │   ├── roles.tsv, sessions.tsv       #   resolved topology

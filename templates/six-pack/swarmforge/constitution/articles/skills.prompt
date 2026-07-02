@@ -1,0 +1,9 @@
+# Skills
+
+- Reusable skills — procedures, checklists, and playbooks — live in
+  `swarmforge/skills/`. They capture HOW to do recurring work well.
+- At the start of a task, scan `swarmforge/skills/README.md`. If a skill's
+  "Use when" matches the work at hand, read that skill file and follow it.
+- Skills refine execution; they never override the constitution or your role
+  prompt. If they ever conflict, the constitution and role prompt win.
+- Do not create or modify skills unless the user directs you to.

@@ -155,7 +155,8 @@ func Init(out io.Writer, opts Options) error {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Next:")
 	fmt.Fprintln(out, "  1. Edit swarmforge/constitution/articles/project.prompt with your task.")
-	fmt.Fprintln(out, "  2. Run: swarmforge up")
+	fmt.Fprintln(out, "  2. (optional) Add reusable skills under swarmforge/skills/ (see its README).")
+	fmt.Fprintln(out, "  3. Run: swarmforge up")
 	return nil
 }
 

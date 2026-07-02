@@ -107,6 +107,8 @@ Done (ported + tested):
       `~/.config/swarmforge/templates`), substitute `{{AGENT}}`/`{{PROJECT}}`, optional
       `--yolo`/`--new`/`--force`, then commit the scaffolding. Ships the `coding-pair`,
       `four-pack`, and `six-pack` coding templates (ported from the upstream branches).
+      Templates include a `swarmforge/skills/` playbook library + a Skills constitution
+      article; committed by `init`, so every agent worktree inherits it via the HEAD snapshot.
 
 Tested:
 - handoff subsystem: black-box tests ported from handoff_test.clj (all pass)
