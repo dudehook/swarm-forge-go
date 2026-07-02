@@ -322,10 +322,13 @@ live swarm and back.
 for a given kind of swarm — into the project, fills in the chosen agent, ensures
 `.gitignore` excludes the swarm's state folders, and commits the scaffolding.
 Templates live in a templates directory on disk (by default
-`~/.config/swarmforge/templates/`), and `swarmforge templates` lists them. `init`
-works both for an existing repository (it adds the `swarmforge/` files without
-disturbing existing work) and for a brand-new project (`--new` creates and
-initializes the directory).
+`~/.config/swarmforge/templates/`), and `swarmforge templates` lists them. The
+binary ships with the built-in templates embedded; `swarmforge templates install`
+copies them into that directory in one step (`--force` overwrites existing ones,
+`--templates-dir` targets a different location). After installing, they're plain
+files you can edit or duplicate. `init` works both for an existing repository (it
+adds the `swarmforge/` files without disturbing existing work) and for a brand-new
+project (`--new` creates and initializes the directory).
 
 Committing the scaffolding matters: worktrees are created from the latest commit
 (`HEAD`), so the role prompts must be committed before launch, or a non-master

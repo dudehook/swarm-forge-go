@@ -2,12 +2,80 @@ package scaffold
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestInstallTemplates(t *testing.T) {
+	src := t.TempDir()
+	makeTemplate(t, src, "coding-pair")
+	makeTemplate(t, src, "four-pack")
+	// A non-template directory must be ignored (no manifest.json).
+	if err := os.MkdirAll(filepath.Join(src, "notatemplate"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	dest := t.TempDir()
+	var out bytes.Buffer
+	if err := InstallTemplates(&out, os.DirFS(src), dest, false); err != nil {
+		t.Fatalf("InstallTemplates: %v", err)
+	}
+	for _, name := range []string{"coding-pair", "four-pack"} {
+		if _, err := os.Stat(filepath.Join(dest, name, "manifest.json")); err != nil {
+			t.Errorf("template %s not installed: %v", name, err)
+		}
+		if _, err := os.Stat(filepath.Join(dest, name, "swarmforge", "swarmforge.conf")); err != nil {
+			t.Errorf("template %s payload not installed: %v", name, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dest, "notatemplate")); !os.IsNotExist(err) {
+		t.Errorf("non-template dir should not be installed")
+	}
+	// The installed templates are now discoverable by List.
+	list, err := List(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 2 {
+		t.Errorf("List after install = %d templates, want 2", len(list))
+	}
+}
+
+func TestInstallTemplatesSkipsThenForces(t *testing.T) {
+	src := t.TempDir()
+	makeTemplate(t, src, "coding-pair")
+	dest := t.TempDir()
+
+	if err := InstallTemplates(io.Discard, os.DirFS(src), dest, false); err != nil {
+		t.Fatal(err)
+	}
+	edited := filepath.Join(dest, "coding-pair", "swarmforge", "constitution.prompt")
+	writeFile(t, edited, "LOCAL EDIT\n")
+
+	// Without --force: skipped, the local edit is preserved.
+	var out bytes.Buffer
+	if err := InstallTemplates(&out, os.DirFS(src), dest, false); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "skip") {
+		t.Errorf("expected a skip message, got: %s", out.String())
+	}
+	if data, _ := os.ReadFile(edited); string(data) != "LOCAL EDIT\n" {
+		t.Errorf("edit should be preserved without --force, got %q", data)
+	}
+
+	// With --force: the file is overwritten from source.
+	if err := InstallTemplates(io.Discard, os.DirFS(src), dest, true); err != nil {
+		t.Fatal(err)
+	}
+	if data, _ := os.ReadFile(edited); string(data) == "LOCAL EDIT\n" {
+		t.Errorf("--force should overwrite the edited file")
+	}
+}
 
 func gitEnv(t *testing.T) {
 	t.Helper()

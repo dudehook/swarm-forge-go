@@ -14,6 +14,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -92,6 +93,74 @@ func load(templateDir string) (*Template, error) {
 		return nil, fmt.Errorf("template %s has no swarmforge/ payload", m.Name)
 	}
 	return &Template{Manifest: m, Dir: templateDir}, nil
+}
+
+// InstallTemplates copies every template from src (typically the binary's
+// embedded templates tree) into the user templates directory, so `init` and
+// `templates` can find them on disk. Existing templates are skipped unless force
+// is set (force overwrites file-by-file, leaving any extra local files in place).
+// src is rooted so each top-level entry is a template dir (name/manifest.json).
+func InstallTemplates(out io.Writer, src fs.FS, override string, force bool) error {
+	dest := TemplatesDir(override)
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		return err
+	}
+	entries, err := fs.ReadDir(src, ".")
+	if err != nil {
+		return err
+	}
+	installed, skipped := 0, 0
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if _, err := fs.Stat(src, path.Join(name, "manifest.json")); err != nil {
+			continue // not a template
+		}
+		targetDir := filepath.Join(dest, name)
+		if _, err := os.Stat(targetDir); err == nil && !force {
+			fmt.Fprintf(out, "  skip  %s (already installed; use --force to overwrite)\n", name)
+			skipped++
+			continue
+		}
+		if err := copyEmbeddedDir(src, name, targetDir); err != nil {
+			return fmt.Errorf("installing template %q: %w", name, err)
+		}
+		fmt.Fprintf(out, "  ok    %s\n", name)
+		installed++
+	}
+	fmt.Fprintf(out, "Installed %d template(s) into %s", installed, dest)
+	if skipped > 0 {
+		fmt.Fprintf(out, " (%d already present)", skipped)
+	}
+	fmt.Fprintln(out)
+	return nil
+}
+
+// copyEmbeddedDir writes the srcDir subtree of src onto destDir on disk.
+func copyEmbeddedDir(src fs.FS, srcDir, destDir string) error {
+	return fs.WalkDir(src, srcDir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(srcDir, p)
+		if err != nil {
+			return err
+		}
+		dest := filepath.Join(destDir, rel)
+		if d.IsDir() {
+			return os.MkdirAll(dest, 0o755)
+		}
+		data, err := fs.ReadFile(src, p)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+			return err
+		}
+		return os.WriteFile(dest, data, 0o644)
+	})
 }
 
 // Options controls an init run.

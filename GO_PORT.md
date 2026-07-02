@@ -34,7 +34,8 @@ internal/terminal/             open a native terminal window per agent (Alacritt
 internal/scaffold/             `swarmforge init` — scaffold a project from a template + commit it
 internal/monitor/              dependency-free swarm-state reader (Snapshot: info/agents/messages/tools)
 internal/tui/                  Bubble Tea read-only dashboard (info, agents, mailbox, tools)
-templates/                     canonical template sources (installed to the user templates dir)
+templates/                     canonical template sources (embedded via templates_embed.go)
+templates_embed.go             root pkg: go:embed of templates/ for `templates install`
 ```
 
 Dependencies: the core (everything except the TUI) is stdlib-only. `internal/tui`
@@ -52,7 +53,8 @@ go build -o swarmforge ./cmd/swarmforge
 ## Try it
 
 ```sh
-# Set up a project (templates live in ~/.config/swarmforge/templates, nothing embedded):
+# Set up a project (templates live in ~/.config/swarmforge/templates):
+swarmforge templates install                  # copy the built-in templates into the user dir
 swarmforge templates                          # list installed templates
 swarmforge init -t coding-pair --agent claude # add SwarmForge to the current repo
 swarmforge init --new --dir myproj -t coding-pair --yolo   # or a fresh project
@@ -109,6 +111,11 @@ Done (ported + tested):
       `four-pack`, and `six-pack` coding templates (ported from the upstream branches).
       Templates include a `swarmforge/skills/` playbook library + a Skills constitution
       article; committed by `init`, so every agent worktree inherits it via the HEAD snapshot.
+- [x] `templates install` (`template install`) — the binary embeds the canonical `templates/`
+      tree (root `templates_embed.go`, `go:embed all:templates`) and copies it into the user
+      templates dir (`--templates-dir` override, `--force` to overwrite). Only the install
+      *source* is embedded; `init`/`templates` still read the on-disk user dir, so installed
+      templates stay editable. Skips already-present templates unless `--force`.
 
 Tested:
 - handoff subsystem: black-box tests ported from handoff_test.clj (all pass)

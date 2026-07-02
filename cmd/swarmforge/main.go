@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	root "github.com/dudehook/swarmforge"
 	"github.com/dudehook/swarmforge/internal/config"
 	"github.com/dudehook/swarmforge/internal/daemon"
 	"github.com/dudehook/swarmforge/internal/handoff"
@@ -56,7 +57,7 @@ func dispatch(cmd string, args []string) error {
 	switch cmd {
 	case "init":
 		return runInit(args)
-	case "templates", "list-templates":
+	case "template", "templates", "list-templates":
 		return runTemplates(args)
 	case "handoff", "send", "swarm_handoff":
 		return runSend(args)
@@ -264,14 +265,30 @@ func stdinIsTerminal() bool {
 	return errno == 0
 }
 
-// runTemplates lists available templates.
+// runTemplates lists available templates, or installs the embedded templates
+// into the user templates directory (`templates install` / `template install`).
 func runTemplates(args []string) error {
+	if len(args) > 0 && args[0] == "install" {
+		return runTemplateInstall(args[1:])
+	}
 	fs := flag.NewFlagSet("templates", flag.ContinueOnError)
 	dir := fs.String("templates-dir", "", "override templates directory")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	return listTemplates(*dir)
+}
+
+// runTemplateInstall copies the binary's embedded templates into the user
+// templates directory so `init`/`templates` can find them.
+func runTemplateInstall(args []string) error {
+	fs := flag.NewFlagSet("template install", flag.ContinueOnError)
+	dir := fs.String("templates-dir", "", "override templates directory")
+	force := fs.Bool("force", false, "overwrite templates that are already installed")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	return scaffold.InstallTemplates(os.Stdout, root.TemplatesFS(), *dir, *force)
 }
 
 func listTemplates(override string) error {
@@ -369,6 +386,8 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  init [-t NAME] [--agent A] [--new] [--dir D] [--yolo]")
 	fmt.Fprintln(os.Stderr, "                            scaffold a project into a SwarmForge project from a template")
 	fmt.Fprintln(os.Stderr, "  templates                 list available templates")
+	fmt.Fprintln(os.Stderr, "  templates install [--force] [--templates-dir D]")
+	fmt.Fprintln(os.Stderr, "                            install the built-in templates into the user templates dir")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Swarm commands:")
 	fmt.Fprintln(os.Stderr, "  up [--windows|--tui|--no-attach|--dry-run]")
