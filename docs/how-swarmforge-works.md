@@ -323,10 +323,12 @@ for a given kind of swarm — into the project, fills in the chosen agent, ensur
 `.gitignore` excludes the swarm's state folders, and commits the scaffolding.
 Templates live in a templates directory on disk (by default
 `~/.config/swarmforge/templates/`), and `swarmforge templates` lists them. The
-binary ships with the built-in templates embedded; `swarmforge templates install`
-copies them into that directory in one step (`--force` overwrites existing ones,
-`--templates-dir` targets a different location). After installing, they're plain
-files you can edit or duplicate. `init` works both for an existing repository (it
+binary ships with the basic `coding-pair` starter template embedded; `swarmforge
+templates install` copies it into that directory in one step (`--force` overwrites
+an existing copy, `--templates-dir` targets a different location). After installing,
+it's plain files you can edit or duplicate. The richer templates (`four-pack`,
+`six-pack`) live in the repo's `templates/` directory and can be copied in manually.
+`init` works both for an existing repository (it
 adds the `swarmforge/` files without disturbing existing work) and for a brand-new
 project (`--new` creates and initializes the directory).
 
