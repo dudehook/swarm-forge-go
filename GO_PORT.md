@@ -26,7 +26,7 @@ internal/project/              project-root discovery, roles.tsv parsing  (hando
 internal/handoff/              message format: headers, body, sequence lock, TASK/BATCH print
 internal/inbox/                inbox state machine (ready_for_next*, done_with_current*)
 internal/send/                 draft validation + outbox enqueue (swarm_handoff.bb)
-internal/config/               swarmforge.conf parser + context/paths/tmux socket (swarmforge.bb)
+internal/config/               swarmforge.conf parser (window + provider) + context/paths/tmux socket (swarmforge.bb)
 internal/launch/               agent command construction, sleep inhibitor, base-index (swarmforge.bb)
 internal/daemon/               handoff delivery daemon + stop (handoffd.bb, stop_handoff_daemon.bb)
 internal/orchestrator/         up/down: git, worktrees, tmux, shims, daemon, attach (run-main!)
@@ -122,11 +122,23 @@ Tested:
   constitution/role prompts tell agents to run all map to written shims
 - config parser validated against the real two-pack swarmforge.conf via `up --dry-run`
 
+Done (ported + tested), cont'd:
+- [x] `provider` directive + inference providers — a `provider <name> <backend> <url>
+      <model>` line names a (backend, url, model) mapping; a `window`'s 3rd field may
+      reference a provider name (else it's a bare agent, back-compat). For the CLI
+      harnesses (claude/codex/grok) a provider just pins `--model`; for the `opencode`
+      backend it registers a local/OpenAI-compatible endpoint. `up` generates
+      `.swarmforge/opencode.json` and launches `opencode --dir … --model <provider>/<model>
+      [--auto] --prompt …` with `OPENCODE_CONFIG` pointed at it. opencode is provider-only
+      (needs a url+model) and an external dep — `up` errors if a provider needs it and it
+      is not on PATH; `--dry-run` warns instead. Tests: config parse/resolution/validation,
+      launch command strings + `--model` injection, opencode.json generation.
+
 Remaining:
-- [ ] Real end-to-end `up` with live `claude` agents doing a task (interactive; the
-      machinery is verified, this is the user-driven acceptance run)
-- [ ] Deferred: local LLM backends (LM Studio/ollama) — see memory note; chosen
-      approach is Claude Code via an Anthropic-format proxy
+- [ ] Real end-to-end `up` with live agents doing a task — both a `claude` swarm and a
+      `local`/opencode swarm against LM Studio (interactive; the machinery is verified,
+      this is the user-driven acceptance run). Confirm opencode TUI honors `--prompt` as
+      the seed message in the live run.
 - [ ] Optional polish: colored banners, top-level `--help`
 
 ## Mapping from the original scripts

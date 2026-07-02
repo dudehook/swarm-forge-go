@@ -71,6 +71,32 @@ Each `window` line declares one role:
 
 When the swarm starts, each role becomes a running agent in its own tmux session.
 
+### Inference providers (picking a model or a local endpoint)
+
+By default the **agent** field is a bare CLI that uses its own login and default
+model. To pin a specific model — or point a role at a **local, OpenAI-compatible
+endpoint** (LM Studio, ollama, or anything speaking `/v1/chat/completions`) — declare
+a *provider* and reference it where you'd normally name the agent:
+
+```
+# provider <name> <backend> <url> <model>
+provider fast-codex     codex    -                        gpt-5-mini
+provider local-deepseek opencode http://localhost:1234/v1 deepseek-9b
+
+window coder   local-deepseek master          # runs on the local model via opencode
+window cleaner fast-codex     cleaner batch    # codex, pinned to a specific model
+window arch    claude         master           # bare agent, default model (still works)
+```
+
+- For the CLI harnesses (`claude`, `codex`, `grok`), a provider just pins the model
+  (`--model`); the `<url>` is unused — write `-`.
+- The **`opencode`** backend is the local/HTTP harness: it drives any OpenAI-compatible
+  endpoint. SwarmForge writes a generated `.swarmforge/opencode.json` registering the
+  endpoint and launches [opencode](https://opencode.ai) against it. `opencode` is only
+  usable through a provider (it needs a url + model), and it must be installed —
+  `swarmforge up` errors if a provider needs it and it isn't on your PATH (`up --dry-run`
+  warns instead). Install it with your package manager (e.g. `pacman -S opencode`).
+
 ---
 
 ## 4. What the agents read

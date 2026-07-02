@@ -65,12 +65,16 @@ func Up(out io.Writer, workDir string, opts Options) error {
 		fmt.Fprintf(out, "%d role(s):\n", len(c.Roles))
 		for i, r := range c.Roles {
 			extra := ""
+			if r.Provider != "" {
+				extra += fmt.Sprintf("  provider=%s model=%s", r.Provider, r.Model)
+			}
 			if r.ExtraArgs != "" {
-				extra = "  args=" + r.ExtraArgs
+				extra += "  args=" + r.ExtraArgs
 			}
 			fmt.Fprintf(out, "  %d. %-10s agent=%-8s worktree=%-8s mode=%-5s session=%s%s\n",
 				i+1, r.Name, r.Agent, r.WorktreeName, r.ReceiveMode, r.Session, extra)
 		}
+		warnMissingBackends(out, c)
 		return nil
 	}
 	if err := checkDependency("tmux"); err != nil {
@@ -240,6 +244,22 @@ func ensureRuntimeGitExcludes(c *config.Context) error {
 		return err
 	}
 	return ensureLine(excludeFile, ".worktrees/")
+}
+
+// warnMissingBackends reports (without failing) any agent backend that is not on
+// PATH. Used by --dry-run so config validation still succeeds on a machine that
+// lacks a harness the config references (e.g. opencode not installed yet).
+func warnMissingBackends(out io.Writer, c *config.Context) {
+	seen := map[string]bool{}
+	for _, r := range c.Roles {
+		if seen[r.Agent] {
+			continue
+		}
+		seen[r.Agent] = true
+		if _, err := exec.LookPath(r.Agent); err != nil {
+			fmt.Fprintf(out, "Warning: backend '%s' is not installed but is required by the config.\n", r.Agent)
+		}
+	}
 }
 
 func checkBackendDependencies(c *config.Context) error {

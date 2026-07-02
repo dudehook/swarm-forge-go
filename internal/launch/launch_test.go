@@ -116,6 +116,83 @@ func TestClaudeKeepsOtherExtraArgs(t *testing.T) {
 	}
 }
 
+// launchRole builds a launch command for a fully specified role (allowing
+// provider/model fields the simpler launchCommand helper doesn't set).
+func launchRole(t *testing.T, row config.Role) (*config.Context, string) {
+	t.Helper()
+	c, err := config.NewContext(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(c.PromptsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if row.WorktreePath == "" {
+		row.WorktreePath = c.WorkingDir
+	}
+	cmd, err := Command(c, 1, row)
+	if err != nil {
+		t.Fatalf("Command: %v", err)
+	}
+	return c, cmd
+}
+
+func TestOpencodeLaunchCommand(t *testing.T) {
+	c, cmd := launchRole(t, config.Role{
+		Name: "coder", Agent: "opencode", DisplayName: "Coder",
+		WorktreeName: "master", Provider: "local-deepseek", Model: "deepseek-9b",
+	})
+	checks := []string{
+		"export OPENCODE_CONFIG=" + ShellQuote(c.OpenCodeConfig),
+		"opencode --dir ",
+		"--model 'local-deepseek/deepseek-9b'",
+		`--prompt "$(cat `,
+	}
+	for _, want := range checks {
+		if !strings.Contains(cmd, want) {
+			t.Errorf("missing %q in: %s", want, cmd)
+		}
+	}
+	if strings.Contains(cmd, "--auto") {
+		t.Errorf("should not auto-approve without --yolo: %s", cmd)
+	}
+}
+
+func TestOpencodeAutoApproveWithYolo(t *testing.T) {
+	_, cmd := launchRole(t, config.Role{
+		Name: "coder", Agent: "opencode", DisplayName: "Coder",
+		Provider: "local", Model: "m", ExtraArgs: "--yolo",
+	})
+	if !strings.Contains(cmd, "--auto") {
+		t.Errorf("expected --auto with --yolo: %s", cmd)
+	}
+	// --yolo is a SwarmForge marker; opencode must not receive it.
+	if strings.Contains(cmd, "--yolo") {
+		t.Errorf("--yolo should be stripped: %s", cmd)
+	}
+}
+
+func TestModelFlagInjectedForCliBackends(t *testing.T) {
+	for _, agent := range []string{"claude", "codex", "grok"} {
+		_, cmd := launchRole(t, config.Role{
+			Name: "coder", Agent: agent, DisplayName: "Coder",
+			Provider: "fast", Model: "some-model",
+		})
+		if !strings.Contains(cmd, "--model 'some-model'") {
+			t.Errorf("%s: missing --model flag: %s", agent, cmd)
+		}
+	}
+}
+
+func TestNoModelFlagWithoutProvider(t *testing.T) {
+	_, cmd := launchRole(t, config.Role{
+		Name: "coder", Agent: "claude", DisplayName: "Coder", WorktreeName: "master",
+	})
+	if strings.Contains(cmd, "--model") {
+		t.Errorf("bare agent should not get --model: %s", cmd)
+	}
+}
+
 func TestSleepInhibitorCanBeDisabled(t *testing.T) {
 	t.Setenv("SWARMFORGE_PREVENT_SLEEP", "0")
 	if got := SleepInhibitorPrefix(); got != nil {

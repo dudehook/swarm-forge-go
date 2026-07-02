@@ -135,6 +135,116 @@ func TestParsesExtraCliArgs(t *testing.T) {
 	}
 }
 
+func TestProviderResolvesOpencodeWindow(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root,
+		"provider local-deepseek opencode http://localhost:1234/v1 deepseek-9b\n"+
+			"window coder local-deepseek master\n",
+		"coder")
+	c := mustParse(t, root)
+	if err := c.PrepareWorkspace(); err != nil {
+		t.Fatalf("PrepareWorkspace: %v", err)
+	}
+	coder, ok := findRole(c, "coder")
+	if !ok {
+		t.Fatal("coder role missing")
+	}
+	if coder.Agent != "opencode" || coder.Provider != "local-deepseek" || coder.Model != "deepseek-9b" {
+		t.Errorf("resolved role wrong: %+v", coder)
+	}
+	// opencode.json is generated with the endpoint baseURL and model.
+	data, err := os.ReadFile(c.OpenCodeConfig)
+	if err != nil {
+		t.Fatalf("opencode.json not written: %v", err)
+	}
+	for _, want := range []string{"local-deepseek", "http://localhost:1234/v1", "deepseek-9b", "@ai-sdk/openai-compatible"} {
+		if !strings.Contains(string(data), want) {
+			t.Errorf("opencode.json missing %q:\n%s", want, data)
+		}
+	}
+}
+
+func TestProviderPinsModelForCliBackend(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root,
+		"provider fast codex - gpt-5-mini\nwindow coder fast master\n", "coder")
+	c := mustParse(t, root)
+	coder, _ := findRole(c, "coder")
+	if coder.Agent != "codex" || coder.Model != "gpt-5-mini" || coder.Provider != "fast" {
+		t.Errorf("cli-backed provider wrong: %+v", coder)
+	}
+	// No opencode providers -> no opencode.json.
+	if err := c.PrepareWorkspace(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(c.OpenCodeConfig); !os.IsNotExist(err) {
+		t.Errorf("opencode.json should not exist for a codex-only config")
+	}
+}
+
+func TestBareAgentStillWorks(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root, "window coder claude master\n", "coder")
+	c := mustParse(t, root)
+	coder, _ := findRole(c, "coder")
+	if coder.Agent != "claude" || coder.Provider != "" || coder.Model != "" {
+		t.Errorf("bare agent role wrong: %+v", coder)
+	}
+}
+
+func TestRejectsDuplicateProvider(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root,
+		"provider p codex - a\nprovider p codex - b\nwindow coder p master\n", "coder")
+	c, _ := NewContext(root)
+	err := c.ParseConfig()
+	if err == nil || !strings.Contains(err.Error(), "Duplicate provider 'p'") {
+		t.Errorf("expected duplicate provider error, got %v", err)
+	}
+}
+
+func TestRejectsBareOpencode(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root, "window coder opencode master\n", "coder")
+	c, _ := NewContext(root)
+	err := c.ParseConfig()
+	if err == nil || !strings.Contains(err.Error(), "opencode requires a provider") {
+		t.Errorf("expected bare-opencode error, got %v", err)
+	}
+}
+
+func TestRejectsUnknownAgentOrProvider(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root, "window coder bogus master\n", "coder")
+	c, _ := NewContext(root)
+	err := c.ParseConfig()
+	if err == nil || !strings.Contains(err.Error(), "Unknown agent or provider 'bogus'") {
+		t.Errorf("expected unknown agent/provider error, got %v", err)
+	}
+}
+
+func TestOpencodeProviderRequiresURL(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root,
+		"provider local opencode - deepseek-9b\nwindow coder local master\n", "coder")
+	c, _ := NewContext(root)
+	err := c.ParseConfig()
+	if err == nil || !strings.Contains(err.Error(), "requires an http(s) url") {
+		t.Errorf("expected opencode url error, got %v", err)
+	}
+}
+
+func TestProviderNameCannotShadowBuiltin(t *testing.T) {
+	root := t.TempDir()
+	writeMinimalProject(t, root,
+		"provider claude codex - gpt-5-mini\nwindow coder claude master\n", "coder")
+	c, _ := NewContext(root)
+	err := c.ParseConfig()
+	if err == nil || !strings.Contains(err.Error(), "conflicts with a built-in agent") {
+		t.Errorf("expected shadow-builtin error, got %v", err)
+	}
+}
+
 func TestAgentStartDelayIsConfigurable(t *testing.T) {
 	t.Setenv("SWARMFORGE_AGENT_START_DELAY_MS", "")
 	if got := AgentStartDelayMS(); got != 1500 {

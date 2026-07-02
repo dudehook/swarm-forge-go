@@ -40,6 +40,16 @@ func extraArgsPrefix(r config.Role) string {
 	return r.ExtraArgs + " "
 }
 
+// modelPrefix returns the `--model <model> ` flag when the role resolved through
+// a provider that pins a model, or "" for the harness's default model. Used by
+// the claude/codex/grok harnesses, which all accept --model.
+func modelPrefix(r config.Role) string {
+	if strings.TrimSpace(r.Model) == "" {
+		return ""
+	}
+	return "--model " + ShellQuote(r.Model) + " "
+}
+
 // wantsAutoApprove reports whether the role requested full unattended
 // auto-approval via a --yolo / --always-approve marker (or an explicit
 // bypassPermissions mode) in its extra CLI args.
@@ -62,9 +72,10 @@ func permissionPrefix(r config.Role) string {
 	return "--permission-mode acceptEdits "
 }
 
-// claudeExtraArgsPrefix passes through the role's extra args minus the
-// SwarmForge auto-approve markers, which the claude CLI does not understand.
-func claudeExtraArgsPrefix(r config.Role) string {
+// nonMarkerExtraArgsPrefix passes through the role's extra args minus the
+// SwarmForge auto-approve markers (--yolo/--always-approve), which the claude
+// and opencode CLIs do not understand — they use their own permission flags.
+func nonMarkerExtraArgsPrefix(r config.Role) string {
 	var kept []string
 	for _, tok := range strings.Fields(r.ExtraArgs) {
 		if tok == "--yolo" || tok == "--always-approve" {
@@ -93,6 +104,10 @@ func Command(c *config.Context, index int, row config.Role) (string, error) {
 		" && export PATH=" + ShellQuote(roleScriptDir) + ":$PATH" +
 		" && cd " + ShellQuote(roleWorktree) +
 		" && "
+	if row.Agent == "opencode" {
+		// opencode discovers the generated provider (baseURL/model) via this env.
+		base = "export OPENCODE_CONFIG=" + ShellQuote(c.OpenCodeConfig) + " && " + base
+	}
 
 	if err := WriteAgentInstructionFile(row.Name, promptFile); err != nil {
 		return "", err
@@ -103,13 +118,22 @@ func Command(c *config.Context, index int, row config.Role) (string, error) {
 	var agentCmd string
 	switch row.Agent {
 	case "claude":
-		agentCmd = "claude --append-system-prompt-file " + q + " " + permissionPrefix(row) + "-n " + display + " " + claudeExtraArgsPrefix(row) + `"$(cat ` + q + `)"`
+		agentCmd = "claude --append-system-prompt-file " + q + " " + permissionPrefix(row) + modelPrefix(row) + "-n " + display + " " + nonMarkerExtraArgsPrefix(row) + `"$(cat ` + q + `)"`
 	case "codex":
-		agentCmd = "codex -C " + ShellQuote(roleWorktree) + " " + extraArgsPrefix(row) + `"$(cat ` + q + `)"`
+		agentCmd = "codex -C " + ShellQuote(roleWorktree) + " " + modelPrefix(row) + extraArgsPrefix(row) + `"$(cat ` + q + `)"`
 	case "copilot":
 		agentCmd = "copilot -C " + ShellQuote(roleWorktree) + " --name " + display + " " + extraArgsPrefix(row) + `-i "$(cat ` + q + `)"`
 	case "grok":
-		agentCmd = "grok --cwd " + ShellQuote(roleWorktree) + " " + permissionPrefix(row) + extraArgsPrefix(row) + `--rules "$(cat ` + q + `)" --verbatim "$(cat ` + q + `)"`
+		agentCmd = "grok --cwd " + ShellQuote(roleWorktree) + " " + permissionPrefix(row) + modelPrefix(row) + extraArgsPrefix(row) + `--rules "$(cat ` + q + `)" --verbatim "$(cat ` + q + `)"`
+	case "opencode":
+		// opencode registers the endpoint under the provider name, referenced as
+		// <provider>/<model>. --auto auto-approves permissions for unattended runs.
+		autoFlag := ""
+		if wantsAutoApprove(row) {
+			autoFlag = "--auto "
+		}
+		modelRef := ShellQuote(row.Provider + "/" + row.Model)
+		agentCmd = "opencode --dir " + ShellQuote(roleWorktree) + " --model " + modelRef + " " + autoFlag + nonMarkerExtraArgsPrefix(row) + `--prompt "$(cat ` + q + `)"`
 	}
 
 	cmd := base + agentCmd
