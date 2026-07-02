@@ -38,6 +38,7 @@ each other, and give them a dependable way to hand work back and forth.
 | **Handoff** | A message passing work from one role to another | An inter-office memo dropped in a mailbox |
 | **Handoff daemon** | A background process that delivers handoffs | The office mail carrier |
 | **Inbox / outbox** | Folders of message files per role | Physical in/out trays |
+| **Skill** | A reusable playbook an agent applies when its "use when" fits | A how-to guide on the shelf |
 
 The whole system is just files and processes on one machine. State lives in two
 hidden folders inside the project: `.swarmforge/` (swarm state) and `.worktrees/`
@@ -261,7 +262,31 @@ short nudge into the recipient's session, prompting it to run `ready_for_next.sh
 
 ---
 
-## 8. The lifecycle: from empty folder to running swarm
+## 8. The dashboard (`swarmforge tui`)
+
+`swarmforge tui` opens a read-only terminal dashboard for a running swarm — a live,
+at-a-glance view that complements watching individual agents in tmux. It polls the
+swarm's state (the same `.swarmforge/` files and tmux status described above) about
+once a second and shows four panels:
+
+- **Info** — project, agent backend(s), tmux socket, and handoff-daemon status.
+- **Agents** — one line per role: alive/dead, idle vs. working (with the current
+  in-process task), receive mode, and inbox counts (new / in-process / completed).
+- **Mailbox activity** — a scrolling feed, one line per handoff: time, from→to,
+  priority, type, task, and state (queued / active / done / failed).
+- **Tools** — an availability checklist (✓/✗) of the quality tools the prompts
+  reference (CRAP, DRY, coverage, …), configurable per project via
+  `swarmforge/tools.tsv` (label → command) and checked with a PATH lookup. It shows
+  whether each tool is *installed*, not its results — agents run tools inside their
+  own sessions, out of the tool's view.
+
+The dashboard is read-only (scroll with ↑/↓, quit with `q`): it observes, it does
+not act. Run it standalone against a running swarm, or start straight into it with
+`swarmforge up --tui`.
+
+---
+
+## 9. The lifecycle: from empty folder to running swarm
 
 SwarmForge exposes a small set of commands that take a project from nothing to a
 live swarm and back.
@@ -288,16 +313,20 @@ agent would start in a worktree that lacks its own instructions.
    (thin wrappers that forward to the `swarmforge` binary's subcommands).
 4. Create a tmux session per role and start the **handoff daemon**.
 5. Launch each agent in its session (staggered slightly).
-6. Attach the terminal to the first role's session (or open per-agent windows with
-   `--windows`, or return immediately with `--no-attach`). `--dry-run` validates the
-   config and prints the plan without launching anything.
+6. Attach the terminal to the first role's session — or open per-agent windows with
+   `--windows`, open the dashboard with `--tui`, or return immediately with
+   `--no-attach`. `--dry-run` validates the config and prints the plan without
+   launching anything.
 
 **`swarmforge down`** stops the daemon and kills all the sessions. Exiting the lead
-agent's session triggers the same teardown automatically.
+agent's session triggers the same teardown automatically. As a safety net, the
+handoff daemon also exits on its own if its `.swarmforge` state directory
+disappears, so deleting a project can't leave an orphaned daemon running (and
+holding the machine awake via its sleep inhibitor).
 
 ---
 
-## 9. Where everything lives
+## 10. Where everything lives
 
 ```
 project/
@@ -318,7 +347,7 @@ project/
 
 ---
 
-## 10. Beyond coding
+## 11. Beyond coding
 
 Nothing in the machinery is coding-specific. The mechanism — isolated workspaces,
 priority mailboxes, and a delivery daemon — is a generic **pipeline of cooperating
@@ -360,7 +389,7 @@ which `swarmforge init` can scaffold new projects.
 
 ---
 
-## 11. Glossary quick-reference
+## 12. Glossary quick-reference
 
 - **Role** — a named job slot in the swarm.
 - **Agent** — the AI CLI (claude/codex/…) running a role.
@@ -372,3 +401,6 @@ which `swarmforge init` can scaffold new projects.
 - **Receive mode** — `task` (one at a time) or `batch` (all top-priority items at once).
 - **Priority** — two digits; lower is more urgent.
 - **Template** — a reusable `swarmforge/` tree that `swarmforge init` scaffolds into a project.
+- **Skill** — a reusable playbook in `swarmforge/skills/`, applied by an agent when its "use when" matches the task.
+- **Dashboard (`swarmforge tui`)** — a read-only TUI showing swarm info, per-agent status, mailbox activity, and tool availability.
+- **Sleep inhibitor** — while a swarm runs, the daemon holds a `systemd-inhibit` lock so the machine won't idle-sleep (disable with `SWARMFORGE_PREVENT_SLEEP=0`).
