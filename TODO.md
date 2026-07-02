@@ -53,6 +53,22 @@ order. Check items off as they land.
 - [ ] Possibly have `up` copy a skills set into each worktree (like the PATH
       shims) so the Claude-native layer is present per-agent.
 
+## Distributed / networked swarms
+
+- [ ] **Agents across multiple machines.** Let one swarm span hosts (e.g. offload
+      some roles to a beefier box, or a machine with a local GPU for `opencode`).
+  - [ ] Run a `swarmforge` daemon on each machine; give it a networking protocol so
+        daemons exchange handoffs across hosts (today delivery is local-filesystem
+        inbox/outbox + local `tmux send-keys` wake).
+  - [ ] Design questions to settle:
+    - [ ] Transport: TCP/gRPC/HTTP service, SSH, or a shared queue? Auth for it.
+    - [ ] Config: which roles live on which host (extend `swarmforge.conf` with a
+          host/placement field).
+    - [ ] Cross-host delivery: remote daemon receives a message, writes it into its
+          local agent's inbox, and wakes that agent locally (wake stays local).
+    - [ ] Shared state: `roles.tsv` / recipient→host routing table each daemon needs.
+    - [ ] Failure handling: host unreachable, retry/queue, partial swarm.
+
 ## Polish
 
 - [ ] Colored banners.
