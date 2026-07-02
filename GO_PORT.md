@@ -45,9 +45,19 @@ feeds it is stdlib-only and independently testable.
 ## Build & test
 
 ```sh
+make build                    # -> ./bin/swarmforge
+make install                  # build + install to ~/.local/bin (override PREFIX/BINDIR)
+make test                     # go test ./... (tmux-dependent launch test auto-skips)
+make vet
+```
+
+Or directly with the Go toolchain (note: build into `bin/`, not the repo root — a
+`swarmforge/` directory already lives there):
+
+```sh
 go build ./...
-go test ./...                 # tmux-dependent launch test auto-skips if tmux absent
-go build -o swarmforge ./cmd/swarmforge
+go test ./...
+go build -o bin/swarmforge ./cmd/swarmforge
 ```
 
 ## Try it
