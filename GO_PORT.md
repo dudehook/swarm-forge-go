@@ -66,7 +66,7 @@ go build -o bin/swarmforge ./cmd/swarmforge
 # Set up a project (templates live in ~/.config/swarmforge/templates):
 swarmforge templates install                  # copy the built-in coding-pair template into the user dir
 swarmforge templates                          # list installed templates
-swarmforge init -t coding-pair --agent claude # add SwarmForge to the current repo
+swarmforge init -t coding-pair --harness claude # add SwarmForge to the current repo
 swarmforge init --new --dir myproj -t coding-pair --yolo   # or a fresh project
 #   init writes swarmforge/, ensures .gitignore, and commits the scaffolding
 

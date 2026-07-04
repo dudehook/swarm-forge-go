@@ -101,7 +101,7 @@ func makeTemplate(t *testing.T, dir, name string) {
 	t.Helper()
 	root := filepath.Join(dir, name)
 	writeFile(t, filepath.Join(root, "manifest.json"),
-		`{"name":"`+name+`","description":"test template","defaultAgent":"claude","roles":["coder","cleaner"]}`)
+		`{"name":"`+name+`","description":"test template","defaultHarness":"claude","roles":["coder","cleaner"]}`)
 	writeFile(t, filepath.Join(root, "swarmforge", "swarmforge.conf"),
 		"window coder {{HARNESS}} master\nwindow cleaner {{HARNESS}} cleaner batch\n")
 	writeFile(t, filepath.Join(root, "swarmforge", "constitution.prompt"), "Read articles.\n")
@@ -150,7 +150,7 @@ func TestInitScaffoldsSubstitutesAndCommits(t *testing.T) {
 		TargetDir:    target,
 		TemplatesDir: tmplDir,
 		TemplateName: "coding-pair",
-		Agent:        "claude",
+		Harness:      "claude",
 		Yolo:         true,
 	})
 	if err != nil {

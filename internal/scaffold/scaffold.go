@@ -21,10 +21,10 @@ import (
 
 // Manifest is a template's manifest.json.
 type Manifest struct {
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	DefaultAgent string   `json:"defaultAgent"`
-	Roles        []string `json:"roles"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	DefaultHarness string   `json:"defaultHarness"`
+	Roles          []string `json:"roles"`
 }
 
 // Template is a resolved on-disk template.
@@ -168,7 +168,7 @@ type Options struct {
 	TargetDir    string
 	TemplatesDir string
 	TemplateName string
-	Agent        string
+	Harness      string
 	Yolo         bool
 	New          bool
 	Force        bool
@@ -184,7 +184,7 @@ func Init(out io.Writer, opts Options) error {
 		return err
 	}
 
-	agent := firstNonEmpty(opts.Agent, tmpl.DefaultAgent, "claude")
+	harness := firstNonEmpty(opts.Harness, tmpl.DefaultHarness, "claude")
 	target, err := filepath.Abs(opts.TargetDir)
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func Init(out io.Writer, opts Options) error {
 	}
 
 	project := filepath.Base(target)
-	if err := copyPayload(tmpl, target, agent, project, opts.Yolo); err != nil {
+	if err := copyPayload(tmpl, target, harness, project, opts.Yolo); err != nil {
 		return err
 	}
 	if err := ensureGitignore(target); err != nil {
@@ -214,7 +214,7 @@ func Init(out io.Writer, opts Options) error {
 	}
 
 	fmt.Fprintf(out, "Scaffolded template %q into %s\n", tmpl.Name, target)
-	fmt.Fprintf(out, "  agent: %s", agent)
+	fmt.Fprintf(out, "  harness: %s", harness)
 	if len(tmpl.Roles) > 0 {
 		fmt.Fprintf(out, "   roles: %s", strings.Join(tmpl.Roles, ", "))
 	}
@@ -231,7 +231,7 @@ func Init(out io.Writer, opts Options) error {
 
 // copyPayload walks the template's swarmforge/ tree into target/swarmforge,
 // substituting {{HARNESS}} and {{PROJECT}} and appending --yolo to conf windows.
-func copyPayload(tmpl *Template, target, agent, project string, yolo bool) error {
+func copyPayload(tmpl *Template, target, harness, project string, yolo bool) error {
 	srcRoot := filepath.Join(tmpl.Dir, "swarmforge")
 	return filepath.WalkDir(srcRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -249,7 +249,7 @@ func copyPayload(tmpl *Template, target, agent, project string, yolo bool) error
 		if err != nil {
 			return err
 		}
-		content := substitute(string(data), filepath.Base(path), agent, project, yolo)
+		content := substitute(string(data), filepath.Base(path), harness, project, yolo)
 		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 			return err
 		}
@@ -257,8 +257,8 @@ func copyPayload(tmpl *Template, target, agent, project string, yolo bool) error
 	})
 }
 
-func substitute(content, base, agent, project string, yolo bool) string {
-	content = strings.ReplaceAll(content, "{{HARNESS}}", agent)
+func substitute(content, base, harness, project string, yolo bool) string {
+	content = strings.ReplaceAll(content, "{{HARNESS}}", harness)
 	content = strings.ReplaceAll(content, "{{PROJECT}}", project)
 	if base == "swarmforge.conf" && yolo {
 		var lines []string

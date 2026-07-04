@@ -1,6 +1,6 @@
 {
   "name": "four-pack",
   "description": "Four-agent spec-driven coding: specifier (Gherkin) -> coder -> refactorer -> architect (batch).",
-  "defaultAgent": "claude",
+  "defaultHarness": "claude",
   "roles": ["specifier", "coder", "refactorer", "architect"]
 }

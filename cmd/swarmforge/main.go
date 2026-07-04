@@ -199,7 +199,7 @@ func runInit(args []string) error {
 	var listOnly bool
 	fs.StringVar(&opts.TemplateName, "template", "", "template name (see 'swarmforge templates')")
 	fs.StringVar(&opts.TemplateName, "t", "", "template name (shorthand)")
-	fs.StringVar(&opts.Agent, "agent", "", "agent backend for all roles (default: template's, else claude)")
+	fs.StringVar(&opts.Harness, "harness", "", "harness (agent CLI) for all roles (default: template's, else claude)")
 	fs.StringVar(&opts.TargetDir, "dir", ".", "target project directory")
 	fs.StringVar(&opts.TemplatesDir, "templates-dir", "", "override templates directory")
 	fs.BoolVar(&opts.New, "new", false, "create the target directory if it does not exist")
@@ -383,7 +383,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "Usage: swarmforge <command> [args...]")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Setup commands:")
-	fmt.Fprintln(os.Stderr, "  init [-t NAME] [--agent A] [--new] [--dir D] [--yolo]")
+	fmt.Fprintln(os.Stderr, "  init [-t NAME] [--harness H] [--new] [--dir D] [--yolo]")
 	fmt.Fprintln(os.Stderr, "                            scaffold a project into a SwarmForge project from a template")
 	fmt.Fprintln(os.Stderr, "  templates                 list available templates")
 	fmt.Fprintln(os.Stderr, "  templates install [--force] [--templates-dir D]")

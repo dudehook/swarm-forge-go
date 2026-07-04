@@ -1,6 +1,6 @@
 {
   "name": "coding-pair",
   "description": "Two-agent TDD coding loop: coder implements behavior slices, cleaner refactors and hardens in batch.",
-  "defaultAgent": "claude",
+  "defaultHarness": "claude",
   "roles": ["coder", "cleaner"]
 }

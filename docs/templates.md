@@ -36,7 +36,7 @@ prompts, articles, skills, config.
 | -------------- | ---------- | ----------------------------------------------------------------------- |
 | `name`         | string     | Template id (defaults to the directory name if omitted).                |
 | `description`  | string     | One-line summary shown by `swarmforge templates`.                       |
-| `defaultAgent` | string     | Agent used for `{{HARNESS}}` when `init` isn't given `--agent` (see §2).   |
+| `defaultHarness` | string     | Agent used for `{{HARNESS}}` when `init` isn't given `--harness` (see §2).   |
 | `roles`        | string[]   | Role names, shown after scaffolding as a convenience. Informational.    |
 
 Example:
@@ -45,7 +45,7 @@ Example:
 {
   "name": "coding-pair",
   "description": "Two-agent TDD coding loop: coder implements, cleaner refactors.",
-  "defaultAgent": "claude",
+  "defaultHarness": "claude",
   "roles": ["coder", "cleaner"]
 }
 ```
@@ -62,8 +62,8 @@ tokens today, plus one special config transform.
 
 Replaced with the agent/harness name for the swarm.
 
-- **Value resolution order:** `--agent <name>` flag → the manifest's
-  `defaultAgent` → `"claude"`.
+- **Value resolution order:** `--harness <name>` flag → the manifest's
+  `defaultHarness` → `"claude"`.
 - **Typical use:** the `window` lines in `swarmforge.conf`, so one template can be
   launched on any harness.
 
@@ -74,7 +74,7 @@ window cleaner {{HARNESS}} cleaner batch
 ```
 
 ```
-# after `swarmforge init --template coding-pair --agent codex`
+# after `swarmforge init --template coding-pair --harness codex`
 window coder   codex master
 window cleaner codex cleaner batch
 ```
@@ -130,7 +130,7 @@ For completeness, a full `swarmforge init` run:
    created from `HEAD`, so the role prompts must be in a commit to be visible.
 
 Flags: `--template`/`-t` (name), `--dir` (target project dir, default `.`),
-`--agent`, `--yolo`, `--new` (create the target dir), `--force` (overwrite an
+`--harness`, `--yolo`, `--new` (create the target dir), `--force` (overwrite an
 existing `swarmforge/`), `--templates-dir`, `--list-templates`.
 
 ---
@@ -165,7 +165,7 @@ it to become a reusable template:
    ```
 
 2. **Add `manifest.json`** with at least `name` and `description`; set
-   `defaultAgent` to whatever the set was written for, and list `roles`.
+   `defaultHarness` to whatever the set was written for, and list `roles`.
 
 3. **Parameterize the harness.** In `swarmforge.conf`, replace the hard-coded
    agent in each `window` line with `{{HARNESS}}`:
