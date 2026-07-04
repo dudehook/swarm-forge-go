@@ -230,7 +230,7 @@ func Init(out io.Writer, opts Options) error {
 }
 
 // copyPayload walks the template's swarmforge/ tree into target/swarmforge,
-// substituting {{AGENT}} and {{PROJECT}} and appending --yolo to conf windows.
+// substituting {{HARNESS}} and {{PROJECT}} and appending --yolo to conf windows.
 func copyPayload(tmpl *Template, target, agent, project string, yolo bool) error {
 	srcRoot := filepath.Join(tmpl.Dir, "swarmforge")
 	return filepath.WalkDir(srcRoot, func(path string, d fs.DirEntry, err error) error {
@@ -258,7 +258,7 @@ func copyPayload(tmpl *Template, target, agent, project string, yolo bool) error
 }
 
 func substitute(content, base, agent, project string, yolo bool) string {
-	content = strings.ReplaceAll(content, "{{AGENT}}", agent)
+	content = strings.ReplaceAll(content, "{{HARNESS}}", agent)
 	content = strings.ReplaceAll(content, "{{PROJECT}}", project)
 	if base == "swarmforge.conf" && yolo {
 		var lines []string

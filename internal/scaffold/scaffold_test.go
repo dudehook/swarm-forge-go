@@ -103,7 +103,7 @@ func makeTemplate(t *testing.T, dir, name string) {
 	writeFile(t, filepath.Join(root, "manifest.json"),
 		`{"name":"`+name+`","description":"test template","defaultAgent":"claude","roles":["coder","cleaner"]}`)
 	writeFile(t, filepath.Join(root, "swarmforge", "swarmforge.conf"),
-		"window coder {{AGENT}} master\nwindow cleaner {{AGENT}} cleaner batch\n")
+		"window coder {{HARNESS}} master\nwindow cleaner {{HARNESS}} cleaner batch\n")
 	writeFile(t, filepath.Join(root, "swarmforge", "constitution.prompt"), "Read articles.\n")
 	writeFile(t, filepath.Join(root, "swarmforge", "roles", "coder.prompt"), "You are the coder of {{PROJECT}}.\n")
 	writeFile(t, filepath.Join(root, "swarmforge", "constitution", "articles", "project.prompt"), "# Project Rules\n")

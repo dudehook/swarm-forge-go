@@ -36,7 +36,7 @@ prompts, articles, skills, config.
 | -------------- | ---------- | ----------------------------------------------------------------------- |
 | `name`         | string     | Template id (defaults to the directory name if omitted).                |
 | `description`  | string     | One-line summary shown by `swarmforge templates`.                       |
-| `defaultAgent` | string     | Agent used for `{{AGENT}}` when `init` isn't given `--agent` (see §2).   |
+| `defaultAgent` | string     | Agent used for `{{HARNESS}}` when `init` isn't given `--agent` (see §2).   |
 | `roles`        | string[]   | Role names, shown after scaffolding as a convenience. Informational.    |
 
 Example:
@@ -58,7 +58,7 @@ When `init` copies each file in the `swarmforge/` payload, it runs a **plain
 literal string replacement** over the file's contents. There are exactly two
 tokens today, plus one special config transform.
 
-### `{{AGENT}}`
+### `{{HARNESS}}`
 
 Replaced with the agent/harness name for the swarm.
 
@@ -69,8 +69,8 @@ Replaced with the agent/harness name for the swarm.
 
 ```
 # swarmforge.conf (template)
-window coder   {{AGENT}} master
-window cleaner {{AGENT}} cleaner batch
+window coder   {{HARNESS}} master
+window cleaner {{HARNESS}} cleaner batch
 ```
 
 ```
@@ -79,7 +79,7 @@ window coder   codex master
 window cleaner codex cleaner batch
 ```
 
-`{{AGENT}}` can hold a bare agent (`claude`, `codex`, `copilot`, `grok`) **or a
+`{{HARNESS}}` can hold a bare agent (`claude`, `codex`, `copilot`, `grok`) **or a
 declared provider name** — `init` doesn't care; the value is substituted as-is
 and validated later by `swarmforge up`. (See how-swarmforge-works.md / the
 `provider` directive for provider/model pinning and `opencode`.)
@@ -89,7 +89,7 @@ and validated later by `swarmforge up`. (See how-swarmforge-works.md / the
 Replaced with the **base name of the target project directory** (e.g. init'ing
 into `/home/me/work/acme` yields `acme`).
 
-- Substituted in every payload file, same as `{{AGENT}}`.
+- Substituted in every payload file, same as `{{HARNESS}}`.
 - **Currently unused by the built-in templates** — it's available for you to
   reference in prompts (e.g. in `constitution/articles/project.prompt`) when you
   want the project name to appear in an agent's instructions.
@@ -103,7 +103,7 @@ marker into the harness's bypass/permission flag). It touches no other file and
 no other line.
 
 ```
-window coder {{AGENT}} master   →   window coder claude master --yolo
+window coder {{HARNESS}} master   →   window coder claude master --yolo
 ```
 
 ### What init does *not* substitute
@@ -122,7 +122,7 @@ For completeness, a full `swarmforge init` run:
 
 1. Resolves the template from the templates dir (§4) and reads its manifest.
 2. Determines `agent` (§2) and `project` (target dir basename).
-3. Copies `swarmforge/` into the target, applying `{{AGENT}}` / `{{PROJECT}}`
+3. Copies `swarmforge/` into the target, applying `{{HARNESS}}` / `{{PROJECT}}`
    substitution and the `--yolo` conf transform.
 4. Ensures `.gitignore` contains `.swarmforge/` and `.worktrees/`.
 5. `git init` (if needed) and commits **only** `swarmforge/` and `.gitignore`
@@ -168,10 +168,10 @@ it to become a reusable template:
    `defaultAgent` to whatever the set was written for, and list `roles`.
 
 3. **Parameterize the harness.** In `swarmforge.conf`, replace the hard-coded
-   agent in each `window` line with `{{AGENT}}`:
+   agent in each `window` line with `{{HARNESS}}`:
 
    ```
-   window coder claude master   →   window coder {{AGENT}} master
+   window coder claude master   →   window coder {{HARNESS}} master
    ```
 
    Leave it hard-coded only if the template is meant to be single-harness.
@@ -181,7 +181,7 @@ it to become a reusable template:
    template today).
 
 5. **Check for accidental tokens.** Since substitution is literal, any real
-   `{{AGENT}}` / `{{PROJECT}}` text in your prompts will be replaced. That's
+   `{{HARNESS}}` / `{{PROJECT}}` text in your prompts will be replaced. That's
    almost always what you want, but be aware.
 
 6. **Don't ship generated dirs.** `swarmforge/scripts/` (PATH shims) and
@@ -193,4 +193,4 @@ it to become a reusable template:
    followed by `swarmforge up --dry-run` should validate the config.
 
 That's the whole contract: a directory + `manifest.json` + a `swarmforge/`
-payload, with `{{AGENT}}` (and optionally `{{PROJECT}}`) as the only knobs.
+payload, with `{{HARNESS}}` (and optionally `{{PROJECT}}`) as the only knobs.

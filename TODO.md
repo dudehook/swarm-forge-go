@@ -10,7 +10,7 @@ order. Check items off as they land.
   - [ ] Templates declare their variables: a list of `{name, prompt, default?,
         required?}` (extend `manifest.json`, or a sibling `variables.json`).
   - [ ] `init` prompts the user for each variable and substitutes the answers into
-        the template's files. Generalizes today's hard-coded `{{AGENT}}` /
+        the template's files. Generalizes today's hard-coded `{{HARNESS}}` /
         `{{PROJECT}}` substitution into arbitrary `{{VAR}}` tokens.
   - [ ] Non-interactive escape hatch: flags / `--yolo` to take defaults and skip
         the wizard (keep `init` scriptable).

@@ -116,7 +116,7 @@ Done (ported + tested):
       checklist). `monitor` is a stdlib-only Snapshot reader; `tui` renders it.
 - [x] `scaffold` — `swarmforge init` / `swarmforge templates`: scaffold a project from a
       disk template (user dir: `--templates-dir` > `$SWARMFORGE_TEMPLATES_DIR` >
-      `~/.config/swarmforge/templates`), substitute `{{AGENT}}`/`{{PROJECT}}`, optional
+      `~/.config/swarmforge/templates`), substitute `{{HARNESS}}`/`{{PROJECT}}`, optional
       `--yolo`/`--new`/`--force`, then commit the scaffolding. Ships the `coding-pair`,
       `four-pack`, and `six-pack` coding templates (ported from the upstream branches).
       Templates include a `swarmforge/skills/` playbook library + a Skills constitution
