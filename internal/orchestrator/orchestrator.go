@@ -20,6 +20,7 @@ import (
 	"github.com/dudehook/swarmforge/internal/launch"
 	"github.com/dudehook/swarmforge/internal/project"
 	"github.com/dudehook/swarmforge/internal/terminal"
+	"github.com/dudehook/swarmforge/internal/tools"
 )
 
 const agentWindow = "swarm"
@@ -335,12 +336,21 @@ func syncWorktreeScripts(c *config.Context) error {
 	if err := writeShims(c, c.ScriptDir); err != nil {
 		return err
 	}
+	// The master working dir's PATH is shared by every role that runs there, so
+	// install the union of their harnesses' needed fallbacks.
+	if err := provisionTools(c.ToolsDir, masterHarnesses(c)); err != nil {
+		return err
+	}
 	for _, r := range c.Roles {
 		if r.WorktreePath == c.WorkingDir {
 			continue
 		}
 		scriptsDir := filepath.Join(r.WorktreePath, "swarmforge", "scripts")
 		if err := writeShims(c, scriptsDir); err != nil {
+			return err
+		}
+		toolsDir := filepath.Join(r.WorktreePath, "swarmforge", "tools")
+		if err := provisionTools(toolsDir, []string{r.Agent}); err != nil {
 			return err
 		}
 		roleState := filepath.Join(r.WorktreePath, ".swarmforge")
@@ -359,6 +369,36 @@ func syncWorktreeScripts(c *config.Context) error {
 		}
 	}
 	return nil
+}
+
+// masterHarnesses returns the harness of every role that runs in the master
+// working directory. These roles share c.ToolsDir on one PATH, so their tool
+// fallbacks are provisioned as a union.
+func masterHarnesses(c *config.Context) []string {
+	var hs []string
+	for _, r := range c.Roles {
+		if r.WorktreePath == c.WorkingDir {
+			hs = append(hs, r.Agent)
+		}
+	}
+	return hs
+}
+
+// provisionTools installs the fallback capability scripts the given harnesses
+// need into dir (those not provided natively by every sharing harness) and
+// writes the generated tools manifest the agent reads. It is harness-blind from
+// the agent's side: the agent only ever sees the resulting commands on its PATH.
+func provisionTools(dir string, harnesses []string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	caps := tools.FallbacksForAll(harnesses)
+	for _, capa := range caps {
+		if err := os.WriteFile(filepath.Join(dir, capa.Name), []byte(capa.Script), 0o755); err != nil {
+			return err
+		}
+	}
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(tools.Manifest(caps)), 0o644)
 }
 
 func writeShims(c *config.Context, dir string) error {

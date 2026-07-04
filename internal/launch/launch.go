@@ -95,13 +95,15 @@ func nonMarkerExtraArgsPrefix(r config.Role) string {
 func Command(c *config.Context, index int, row config.Role) (string, error) {
 	roleWorktree := row.WorktreePath
 	roleScriptDir := c.ScriptDir
+	roleToolsDir := c.ToolsDir
 	if roleWorktree != c.WorkingDir {
 		roleScriptDir = filepath.Join(roleWorktree, "swarmforge", "scripts")
+		roleToolsDir = filepath.Join(roleWorktree, "swarmforge", "tools")
 	}
 	promptFile := filepath.Join(c.PromptsDir, row.Name+".md")
 
 	base := "export SWARMFORGE_ROLE=" + ShellQuote(row.Name) +
-		" && export PATH=" + ShellQuote(roleScriptDir) + ":$PATH" +
+		" && export PATH=" + ShellQuote(roleScriptDir) + ":" + ShellQuote(roleToolsDir) + ":$PATH" +
 		" && cd " + ShellQuote(roleWorktree) +
 		" && "
 	if row.Agent == "opencode" {

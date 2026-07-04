@@ -66,6 +66,7 @@ type Provider struct {
 type Context struct {
 	WorkingDir       string
 	ScriptDir        string // directory of shim commands placed on each agent's PATH
+	ToolsDir         string // directory of capability tools placed on each agent's PATH
 	SwarmForgeDir    string
 	WorktreesDir     string
 	ConfigFile       string
@@ -110,6 +111,7 @@ func NewContext(workingDir string) (*Context, error) {
 	return &Context{
 		WorkingDir:       abs,
 		ScriptDir:        filepath.Join(swarmDir, "scripts"),
+		ToolsDir:         filepath.Join(swarmDir, "tools"),
 		SwarmForgeDir:    swarmDir,
 		WorktreesDir:     filepath.Join(abs, ".worktrees"),
 		ConfigFile:       filepath.Join(swarmDir, "swarmforge.conf"),

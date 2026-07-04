@@ -40,6 +40,36 @@ func launchCommand(t *testing.T, root, agent, extraArgs string) (*config.Context
 	return c, cmd
 }
 
+func TestLaunchPutsScriptsAndToolsOnPath(t *testing.T) {
+	c, cmd := launchCommand(t, t.TempDir(), "claude", "")
+	want := "export PATH=" + ShellQuote(c.ScriptDir) + ":" + ShellQuote(c.ToolsDir) + ":$PATH"
+	if !strings.Contains(cmd, want) {
+		t.Errorf("missing %q in: %s", want, cmd)
+	}
+}
+
+func TestLaunchWorktreeToolsPath(t *testing.T) {
+	c, err := config.NewContext(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(c.PromptsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	wt := filepath.Join(c.WorktreesDir, "coderwt")
+	cmd, err := Command(c, 1, config.Role{
+		Name: "coder", Agent: "claude", DisplayName: "Coder",
+		WorktreeName: "coderwt", WorktreePath: wt, ReceiveMode: "task",
+	})
+	if err != nil {
+		t.Fatalf("Command: %v", err)
+	}
+	want := ":" + ShellQuote(filepath.Join(wt, "swarmforge", "tools")) + ":$PATH"
+	if !strings.Contains(cmd, want) {
+		t.Errorf("missing worktree tools dir on PATH: %s", cmd)
+	}
+}
+
 func TestCopilotLaunchCommandPassesExtraCliArgs(t *testing.T) {
 	_, cmd := launchCommand(t, t.TempDir(), "copilot", "--yolo")
 	if !strings.Contains(cmd, "copilot -C ") {

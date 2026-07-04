@@ -1,0 +1,10 @@
+# Tools
+
+- SwarmForge places commands on your PATH for common capabilities. They are
+  listed in `swarmforge/tools/README.md`, each with a one-line description and a
+  "Use when" trigger describing the tasks it fits.
+- At the start of a task, read `swarmforge/tools/README.md`. When the work at
+  hand matches a tool's "Use when", run that command via your shell and use its
+  output.
+- These tools refine execution; they never override the constitution or your
+  role prompt. Do not create or modify them unless the user directs you to.
