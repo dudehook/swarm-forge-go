@@ -31,6 +31,34 @@ order. Check items off as they land.
   - [ ] Action keys (attach / down / send from the TUI).
   - [ ] Live tool metrics (needs agents to write results into `.swarmforge`).
 
+## Human-in-the-loop mailbox
+
+- [ ] **A mailbox message addressed to the human operator.** Let an agent send a
+      handoff whose recipient is the human, which the daemon surfaces to the
+      person instead of waking a tmux agent. Uses: questions the swarm needs
+      answered, "task complete" notifications, error / blocked-agent alerts.
+  - [ ] **Addressing:** a reserved recipient name (e.g. `human` / `operator`).
+        Reserve it in config validation so it can't collide with a real role.
+  - [ ] **Reuse the pipeline:** ride the existing handoff/inbox flow and
+        `swarmforge send`; the daemon special-cases the reserved recipient and
+        routes it to a human channel rather than `tmux send-keys`.
+  - [ ] **Message kinds / severity:** `question` (needs a reply), `notice` (FYI,
+        e.g. completed task), `error`/`alert` (blocked/failed). Maybe a priority.
+  - [ ] **Delivery channels (Linux target):** (a) a dedicated
+        `.swarmforge/human-inbox/` the TUI surfaces prominently with an unread
+        count; (b) OS notification via `notify-send`; (c) tmux `display-message` /
+        bell; (d) append to a log. Likely TUI panel + `notify-send`, configurable.
+  - [ ] **Reply path (the two-way part):** a human answer becomes a handoff back
+        to the asking agent — daemon writes it into that agent's inbox and wakes
+        it locally. Could be `swarmforge reply <msg-id> <text>` or the existing
+        send tooling with the human as sender. Decide whether/how the asking agent
+        blocks or idles while waiting (ties into receive modes).
+  - [ ] **TUI:** a Human Inbox panel + unread badge, folded into the deferred
+        "Alerts strip" idea, with an action key to answer inline.
+  - [ ] **Open questions:** the reserved recipient name; do questions block the
+        sender; notification-backend config; how errors from the daemon *itself*
+        (not an agent) are represented; dedupe / rate-limit for noisy notices.
+
 ## Templates
 
 - [ ] **Rethink template distribution.** Embedding feels wrong for non-static
